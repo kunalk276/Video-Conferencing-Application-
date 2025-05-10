@@ -1,0 +1,281 @@
+/* Reset Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb;
+  color: #333;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Hero Section Styles */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #1d2671, #c33764);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 50px;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  animation: fadeInUp 1s ease-out;
+}
+
+.hero-description {
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-bottom: 30px;
+  max-width: 600px;
+  animation: fadeInUp 1.5s ease-out;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  animation: fadeInUp 2s ease-out;
+}
+
+.cta-button {
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  background-color: #6c3ccf;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cta-button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.cta-button:active {
+  transform: translateY(1px);
+}
+
+.cta-register {
+  background-color: #48bb78;
+}
+
+.cta-register:hover {
+  background-color: #38a169;
+}
+
+.cta-login {
+  background-color: #4299e1;
+}
+
+.cta-login:hover {
+  background-color: #3182ce;
+}
+
+.cta-start {
+  background-color: #f6ad55;
+}
+
+.cta-start:hover {
+  background-color: #f46f2e;
+}
+
+.features-section {
+  position: relative;
+  padding: 50px 20px;
+  overflow: hidden;
+  text-align: center;
+  color: #b76c6c;
+  background-color: rgba(179, 188, 43, 0.4); 
+  backdrop-filter: blur(10px); 
+  border-radius: 15px; 
+}
+
+.feature-heading {
+  font-size: 1.rem;
+  font-weight: 600;
+  color: #ec3110;
+  margin-bottom: 15px;
+  display: inline-block;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.blur-background {
+  display: inline-block;
+  background-color: rgba(60, 80, 196, 0.6); /* Dark blur background */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); /* For Safari */
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: #dcd4d4;
+  line-height: 1.4;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+
+
+.features-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.features-list {
+  display: flex;
+  justify-content: flex-start; 
+  gap: 40px;
+  overflow-x: auto; 
+  padding-bottom: 10px; 
+  scroll-behavior: smooth;
+}
+
+.feature-item {
+  min-width: 300px; 
+  height: 200px; 
+  background: rgba(255, 255, 255, 0.9); 
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 0.4s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 1s ease forwards;
+  opacity: 0;
+}
+
+.feature-item:nth-child(1) {
+  animation-delay: 0.2s;
+  background-image: url('https://img.freepik.com/free-photo/portrait-young-business-woman-video-call-from-home_58466-15753.jpg');
+}
+
+.feature-item:nth-child(2) {
+  animation-delay: 0.4s;
+  background-image: url('https://img.freepik.com/free-vector/electronic-contract-agreement-concept-with-business-people-signing-documents-online-blue-background-3d-isometric-vector-illustration_1284-78854.jpg');
+}
+
+.feature-item:nth-child(3) {
+  animation-delay: 0.6s;
+  background-image: url('https://img.freepik.com/free-vector/isometric-customer-support-illustration_23-2148897458.jpg');
+}
+
+.feature-item:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Entry animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Footer Styles */
+.app-footer {
+  background: linear-gradient(to right, #1e293b, #4b5563);
+  color: #f9fafb;
+  padding: 25px 15px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 100%;
+}
+
+.app-footer p {
+  margin: 0;
+  animation: fadeInUp 0.8s ease-in-out;
+}
+
+.app-footer strong {
+  color: #60a5fa;
+}
+
+/* Optional subtle animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .features-list {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .feature-item {
+    max-width: 100%;
+  }
+
+  .carousel-item {
+    padding: 10px;
+  }
+}
