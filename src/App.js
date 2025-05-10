@@ -6,7 +6,7 @@ import Register from './components/Register';
 import Login from './components/Login';
 import VideoCall from './components/VideoCall';
 import ChatBox from './components/ChatBox';
-
+import './index.css';  
 const App = () => {
   return (
     <Router>
