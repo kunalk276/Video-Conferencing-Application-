@@ -187,7 +187,7 @@ const VideoCall = () => {
     }
 
     setJoined(true);
-    socketRef.current = new WebSocket("ws://localhost:8080/ws/signaling");
+    socketRef.current = new WebSocket("ws://https://video-conferencing-application-gmsl.onrender.com/ws/signaling");
 
     socketRef.current.onopen = async () => {
       await startLocalStream();
