@@ -10,7 +10,7 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000" ,"https://video-conferencing-application-taupe.vercel.app"})
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor

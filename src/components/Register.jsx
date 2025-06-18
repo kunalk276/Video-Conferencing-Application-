@@ -39,7 +39,7 @@ const Register = () => {
   
   const onSubmit = async (data) => {
   try {
-    const response = await fetch("http://localhost:8080/users", {
+    const response = await fetch("https://video-conferencing-application-gmsl.onrender.com/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

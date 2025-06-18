@@ -126,7 +126,7 @@ import { v4 as uuidv4 } from "uuid";
 import './VideoCall.css';
 import ChatBox from './ChatBox';
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "https://video-conferencing-application-gmsl.onrender.com";
 
 const VideoCall = () => {
   const localVideoRef = useRef();

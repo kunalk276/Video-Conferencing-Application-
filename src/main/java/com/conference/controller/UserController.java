@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000" ,"https://video-conferencing-application-taupe.vercel.app"})
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor

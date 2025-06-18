@@ -13,7 +13,7 @@ const Login = ({ onLoginSuccess }) => {
     const password = e.target[1].value;
 
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const response = await fetch("https://video-conferencing-application-gmsl.onrender.com/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
