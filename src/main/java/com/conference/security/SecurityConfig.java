@@ -27,7 +27,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000","https://video-conferencing-application-taupe.vercel.app","https://video-conferencing-application-mu.vercel.app/")
+                        .allowedOrigins("http://localhost:3000","https://video-conferencing-application-taupe.vercel.app","https://video-conferencing-application-gamma.vercel.app/")
                         .allowedMethods("*")
                         .allowedHeaders("*")
                         .allowCredentials(true);
