@@ -25,17 +25,17 @@ const Login = ({ onLoginSuccess }) => {
 
       const data = await response.json();
 
-      // ✅ Save token and user ID to localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.id); // Make sure backend returns `id`
 
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.id);
+       localStorage.setItem("username", data.username);
       setError("");
       setSuccessMessage("Login Successful!");
 
-      // Navigate to home
+
       navigate("/home1");
 
-      // Optional callback
+
       onLoginSuccess?.();
     } catch (err) {
       setError(err.message);

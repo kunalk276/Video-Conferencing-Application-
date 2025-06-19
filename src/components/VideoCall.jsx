@@ -28,6 +28,8 @@ const VideoCall = () => {
   const streamRef = useRef(null);
 
   const [userId] = useState(localStorage.getItem("userId"));
+  const [username] = useState(localStorage.getItem("username"));
+
   const [roomId, setRoomId] = useState("");
   const [createdRoomId, setCreatedRoomId] = useState("");
   const [joined, setJoined] = useState(false);
@@ -336,7 +338,9 @@ const startScreenShare = async () => {
             <div className="main-video-area">
               <div className="participant-count">
                 <p><FontAwesomeIcon icon={faDoorOpen} /> Room: {roomId}</p>
-                <p><FontAwesomeIcon icon={faUser} /> Your ID: {userId}</p>
+{/*                 <p><FontAwesomeIcon icon={faUser} /> Your ID: {userId}</p> */}
+                <p><FontAwesomeIcon icon={faUser} /> You: <strong>{username}</strong></p>
+
                 <p><FontAwesomeIcon icon={faUsers} /> Participants: {participants.length + 1}</p>
               </div>
 
