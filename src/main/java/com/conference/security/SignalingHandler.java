@@ -75,6 +75,18 @@ public class SignalingHandler extends TextWebSocketHandler {
                 }
                 break;
 
+            case "user-left":
+
+                for (WebSocketSession s : sessionList) {
+                    if (!s.getId().equals(session.getId()) && s.isOpen()) {
+                        Map<String, Object> leaveMessage = new HashMap<>();
+                        leaveMessage.put("type", "user-left");
+                        leaveMessage.put("sender", sender);
+                        leaveMessage.put("roomId", room);
+                        s.sendMessage(new TextMessage(mapper.writeValueAsString(leaveMessage)));
+                    }
+                }
+                break;
 
             default:
                 System.out.println("Unknown message type: " + type);
@@ -84,10 +96,31 @@ public class SignalingHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        for (List<WebSocketSession> sessionList : rooms.values()) {
+        String sender = sessionUserMap.remove(session.getId());
+
+        for (Map.Entry<String, List<WebSocketSession>> entry : rooms.entrySet()) {
+            List<WebSocketSession> sessionList = entry.getValue();
             sessionList.remove(session);
+
+
+            if (sender != null) {
+                for (WebSocketSession s : sessionList) {
+                    if (s.isOpen()) {
+                        Map<String, Object> leaveMessage = new HashMap<>();
+                        leaveMessage.put("type", "user-left");
+                        leaveMessage.put("sender", sender);
+                        leaveMessage.put("roomId", entry.getKey());
+                        try {
+                            s.sendMessage(new TextMessage(mapper.writeValueAsString(leaveMessage)));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
         }
-        sessionUserMap.remove(session.getId());
+
         System.out.println("Connection closed: " + session.getId());
     }
+
 }

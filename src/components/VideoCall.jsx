@@ -294,19 +294,32 @@ const startScreenShare = async () => {
       sendSignal({ type: "user-left", sender: userId });
     }
 
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    Object.values(peersRef.current).forEach((p) => p.close());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+
+    Object.values(peersRef.current).forEach((peer) => peer.close());
+    peersRef.current = {};
+
+    Object.values(remoteVideosRef.current).forEach((videoEl) => {
+      if (videoEl && videoEl.parentNode) {
+        videoEl.classList.add("fade-out");
+        setTimeout(() => {
+          if (videoEl.parentNode) {
+            videoEl.parentNode.removeChild(videoEl);
+          }
+        }, 500);
+      }
+    });
+    remoteVideosRef.current = {};
+
+    document.getElementById("remote-container").innerHTML = "";
     socketRef.current?.close();
 
     setJoined(false);
     setParticipants([]);
-    peersRef.current = {};
-    remoteVideosRef.current = {};
-    streamRef.current = null;
-
-    document.getElementById("remote-container").innerHTML = "";
   };
-
 
 
 
