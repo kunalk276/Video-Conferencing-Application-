@@ -220,6 +220,53 @@ const VideoCall = () => {
     }
   };
 
+const startScreenShare = async () => {
+  try {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+
+    const screenTrack = screenStream.getVideoTracks()[0];
+
+    // Replace video track in all peer connections
+    Object.values(peersRef.current).forEach((peer) => {
+      const senders = peer.getSenders();
+      const videoSender = senders.find(sender => sender.track?.kind === 'video');
+      if (videoSender) {
+        videoSender.replaceTrack(screenTrack);
+      }
+    });
+
+    // Replace the local video display
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = screenStream;
+    }
+
+    // When screen share stops, revert back to webcam
+    screenTrack.onended = async () => {
+      const webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const newVideoTrack = webcamStream.getVideoTracks()[0];
+      streamRef.current = webcamStream;
+
+      Object.values(peersRef.current).forEach((peer) => {
+        const senders = peer.getSenders();
+        const videoSender = senders.find(sender => sender.track?.kind === 'video');
+        if (videoSender) {
+          videoSender.replaceTrack(newVideoTrack);
+        }
+      });
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = webcamStream;
+      }
+    };
+
+  } catch (err) {
+    alert("Screen share failed or canceled");
+    console.error("Screen share error:", err);
+  }
+};
+
+
+
   const leaveMeeting = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     Object.values(peersRef.current).forEach((p) => p.close());
@@ -241,7 +288,7 @@ const VideoCall = () => {
         alt="Logo"
         className="logo"
       />
-      <h2>📹 Video Conferencing</h2>
+      <h2> Video Conferencing</h2>
 
       {!joined ? (
         <>
@@ -278,7 +325,10 @@ const VideoCall = () => {
           <div className="video-controls">
             <button onClick={toggleVideo}>{videoEnabled ? "📷 Turn Off Video" : "📷 Turn On Video"}</button>
             <button onClick={toggleAudio}>{audioEnabled ? "🔊 Mute Mic" : "🔇 Unmute Mic"}</button>
+            <button onClick={startScreenShare}>🖥️ Share Screen</button>
             <button onClick={leaveMeeting} className="leave-button">❌ Leave</button>
+
+
           </div>
 
           <div style={{ marginTop: '40px' }}>
