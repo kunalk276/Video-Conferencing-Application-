@@ -62,6 +62,7 @@ public class SignalingHandler extends TextWebSocketHandler {
                 }
                 break;
 
+
             default:
                 System.out.println("Unknown message type: " + type);
                 break;

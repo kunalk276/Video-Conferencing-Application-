@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import './VideoCall.css';
+import { v4 as uuidv4 } from "uuid";
 import ChatBox from './ChatBox';
 
 const BASE_URL = "https://video-conferencing-application-gmsl.onrender.com";
@@ -12,7 +12,7 @@ const VideoCall = () => {
   const peersRef = useRef({});
   const streamRef = useRef(null);
 
-  const [userId] = useState(uuidv4());
+  const [userId] = useState(localStorage.getItem("userId"));
   const [roomId, setRoomId] = useState("");
   const [createdRoomId, setCreatedRoomId] = useState("");
   const [joined, setJoined] = useState(false);
@@ -20,54 +20,42 @@ const VideoCall = () => {
 
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
-  const [meetingId, setMeetingId] = useState(null); // 🔑 For chat
+  const [meetingId, setMeetingId] = useState(null);
 
   const handleCreateRoom = async () => {
     try {
       const meetingCode = uuidv4().slice(0, 8).toUpperCase();
-      const hostId = localStorage.getItem("userId");
 
-      if (!hostId) {
-        alert("User not logged in");
-        return;
-      }
+      if (!userId) return alert("User not logged in");
 
       const response = await fetch(`${BASE_URL}/meetings`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: "My Video Meeting",
           meetingCode,
           startTime: new Date().toISOString(),
-          hostId: Number(hostId),
+          hostId: Number(userId),
         }),
       });
-
-      if (!response.ok) throw new Error("Failed to create meeting");
 
       const meeting = await response.json();
       setRoomId(meeting.meetingCode);
       setCreatedRoomId(meeting.meetingCode);
       setMeetingId(meeting.id);
-    } catch (error) {
-      console.error("Error creating room:", error);
-      alert("Failed to create room. Try again.");
+    } catch (e) {
+      alert("Room creation failed");
     }
   };
 
   const handleJoinRoom = async () => {
-    if (!roomId) return alert("Please enter a room ID");
-
+    if (!roomId) return alert("Enter Room ID");
     try {
-      // ✅ Resolve meetingId from roomId (meetingCode)
       const res = await fetch(`${BASE_URL}/meetings/code/${roomId}`);
-      if (!res.ok) throw new Error("Invalid Room ID");
       const meeting = await res.json();
       setMeetingId(meeting.id);
-
       setJoined(true);
+
       socketRef.current = new WebSocket(`${BASE_URL.replace("https", "wss")}/ws/signaling`);
 
       socketRef.current.onopen = async () => {
@@ -87,7 +75,7 @@ const VideoCall = () => {
             await handleOffer(data);
             break;
           case "answer":
-            await peersRef.current[data.sender].setRemoteDescription(new RTCSessionDescription(data.sdp));
+            await peersRef.current[data.sender]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
             break;
           case "ice-candidate":
             await peersRef.current[data.sender]?.addIceCandidate(new RTCIceCandidate(data.candidate));
@@ -95,26 +83,18 @@ const VideoCall = () => {
         }
       };
     } catch (err) {
-      console.error("Join Error:", err);
-      alert("Failed to join room.");
+      alert("Join room failed");
     }
   };
 
   const startLocalStream = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      streamRef.current = stream;
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-    } catch (err) {
-      console.error("Media error:", err);
-      alert("Could not access camera or microphone.");
-    }
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    streamRef.current = stream;
+    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
   };
 
   const createPeer = (targetId) => {
-    const peer = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
+    const peer = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
 
     peer.onicecandidate = (e) => {
       if (e.candidate) {
@@ -136,7 +116,6 @@ const VideoCall = () => {
     };
 
     streamRef.current.getTracks().forEach((track) => peer.addTrack(track, streamRef.current));
-
     peersRef.current[targetId] = peer;
     return peer;
   };
@@ -177,8 +156,8 @@ const VideoCall = () => {
   };
 
   const leaveMeeting = () => {
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    Object.values(peersRef.current).forEach(p => p.close());
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    Object.values(peersRef.current).forEach((p) => p.close());
     socketRef.current?.close();
 
     setJoined(false);
@@ -187,8 +166,7 @@ const VideoCall = () => {
     remoteVideosRef.current = {};
     streamRef.current = null;
 
-    const container = document.getElementById("remote-container");
-    if (container) container.innerHTML = "";
+    document.getElementById("remote-container").innerHTML = "";
   };
 
   return (
@@ -200,17 +178,12 @@ const VideoCall = () => {
       />
       <h2>📹 Video Conferencing</h2>
 
-      {!joined && (
+      {!joined ? (
         <>
-          <div style={{ textAlign: "center", marginBottom: "20px" }}>
+          <div style={{ textAlign: "center" }}>
             <button onClick={handleCreateRoom} className="join-button">➕ Create Room</button>
-            {createdRoomId && (
-              <p className="room-id-text">
-                <span>🆔 Room ID: </span><strong>{createdRoomId}</strong>
-              </p>
-            )}
+            {createdRoomId && <p className="room-id-text">🆔 Room ID: <strong>{createdRoomId}</strong></p>}
           </div>
-
           <div className="join-room" style={{ textAlign: "center" }}>
             <input
               type="text"
@@ -222,14 +195,12 @@ const VideoCall = () => {
             <button onClick={handleJoinRoom} className="join-button">🚪 Join Room</button>
           </div>
         </>
-      )}
-
-      {joined && (
+      ) : (
         <>
           <div className="participant-count">
-            <p>🏠 <strong>Room:</strong> {roomId}</p>
-            <p>👤 <strong>Your ID:</strong> {userId}</p>
-            <p>👥 <strong>Participants:</strong> {participants.length + 1}</p>
+            <p>🏠 Room: {roomId}</p>
+            <p>👤 Your ID: {userId}</p>
+            <p>👥 Participants: {participants.length + 1}</p>
           </div>
 
           <div className="local-video-container">
@@ -240,26 +211,19 @@ const VideoCall = () => {
           <div id="remote-container" className="remote-videos-container" />
 
           <div className="video-controls">
-            <button onClick={toggleVideo}>
-              {videoEnabled ? "📷 Turn Off Video" : "📷 Turn On Video"}
-            </button>
-            <button onClick={toggleAudio}>
-              {audioEnabled ? "🔊 Mute Mic" : "🔇 Unmute Mic"}
-            </button>
-            <button onClick={leaveMeeting} className="leave-button">
-              ❌ Leave
-            </button>
+            <button onClick={toggleVideo}>{videoEnabled ? "📷 Turn Off Video" : "📷 Turn On Video"}</button>
+            <button onClick={toggleAudio}>{audioEnabled ? "🔊 Mute Mic" : "🔇 Unmute Mic"}</button>
+            <button onClick={leaveMeeting} className="leave-button">❌ Leave</button>
           </div>
 
           <div style={{ marginTop: '40px' }}>
             <h3 style={{ textAlign: "center" }}>💬 Meeting Chat</h3>
-            {roomId && <ChatBox meetingId={roomId} senderId={userId} />}
+            {meetingId && userId && <ChatBox meetingId={meetingId} senderId={userId} />}
           </div>
         </>
       )}
     </div>
   );
-
 };
 
 export default VideoCall;
