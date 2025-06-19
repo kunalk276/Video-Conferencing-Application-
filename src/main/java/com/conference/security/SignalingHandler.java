@@ -42,13 +42,26 @@ public class SignalingHandler extends TextWebSocketHandler {
                     sessionUserMap.put(session.getId(), sender);
                 }
 
-                boolean isInitiator = sessionList.size() == 1;
 
-                Map<String, Object> joinResponse = new HashMap<>();
-                joinResponse.put("type", "join");
-                joinResponse.put("initiator", isInitiator);
-                session.sendMessage(new TextMessage(mapper.writeValueAsString(joinResponse)));
+                for (WebSocketSession s : sessionList) {
+                    if (!s.getId().equals(session.getId()) && s.isOpen()) {
+                        Map<String, Object> joinNotification = new HashMap<>();
+                        joinNotification.put("type", "join");
+                        joinNotification.put("sender", sender);
+                        joinNotification.put("roomId", room);
+                        s.sendMessage(new TextMessage(mapper.writeValueAsString(joinNotification)));
+                    }
+                }
+
+
+                Map<String, Object> joinAck = new HashMap<>();
+                joinAck.put("type", "join-ack");
+                joinAck.put("roomId", room);
+                joinAck.put("sender", sender);
+                session.sendMessage(new TextMessage(mapper.writeValueAsString(joinAck)));
+
                 break;
+
 
             case "offer":
             case "answer":

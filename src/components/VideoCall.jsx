@@ -22,6 +22,8 @@ const VideoCall = () => {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [meetingId, setMeetingId] = useState(null);
 
+
+
   const handleCreateRoom = async () => {
     try {
       const meetingCode = uuidv4().slice(0, 8).toUpperCase();
@@ -156,7 +158,7 @@ const VideoCall = () => {
        videoEl.autoplay = true;
        videoEl.playsInline = true;
        videoEl.width = 250;
-       videoEl.controls = true; // Optional: add controls for testing
+       videoEl.controls = false;
        videoEl.srcObject = stream;
 
        remoteVideosRef.current[targetId] = videoEl;
