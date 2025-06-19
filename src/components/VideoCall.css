@@ -183,3 +183,30 @@ h3 {
   font-size: 12px;
   white-space: nowrap;
 }
+
+
+.conference-section {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.main-video-area {
+  flex: 3;
+}
+
+.chat-section {
+  flex: 1;
+  max-width: 300px;
+  background: #f4f4f4;
+  padding: 15px;
+  border-radius: 10px;
+  height: 500px;
+  overflow-y: auto;
+}
+
+.chat-title {
+  text-align: center;
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}

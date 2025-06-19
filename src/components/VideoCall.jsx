@@ -295,27 +295,32 @@ const startScreenShare = async () => {
     document.getElementById("remote-container").innerHTML = "";
   };
 
+
+
 <link
   rel="stylesheet"
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 />
 
-  return (
-    <div className="video-container">
-      <img
-        src="https://img.freepik.com/premium-vector/facetime-app-icon-video-audio-chatting-platform_277909-629.jpg?w=900"
-        alt="Logo"
-        className="logo"
-      />
-      <h2> Video Conferencing</h2>
+   return (
+      <div className="video-container">
+        <header className="header">
+          <img
+            src="https://img.freepik.com/premium-vector/facetime-app-icon-video-audio-chatting-platform_277909-629.jpg?w=900"
+            alt="Logo"
+            className="logo"
+          />
+          <h2>Video Conferencing</h2>
+        </header>
 
-      {!joined ? (
-        <>
-          <div style={{ textAlign: "center" }}>
+        {!joined ? (
+          <div className="join-section">
             <button onClick={handleCreateRoom} className="join-button">➕ Create Room</button>
-            {createdRoomId && <p className="room-id-text">🆔 Room ID: <strong>{createdRoomId}</strong></p>}
-          </div>
-          <div className="join-room" style={{ textAlign: "center" }}>
+            {createdRoomId && (
+              <p className="room-id-text">
+                🆔 Room ID: <strong>{createdRoomId}</strong>
+              </p>
+            )}
             <input
               type="text"
               placeholder="🔑 Enter Room ID"
@@ -325,59 +330,58 @@ const startScreenShare = async () => {
             />
             <button onClick={handleJoinRoom} className="join-button">🚪 Join Room</button>
           </div>
-        </>
-      ) : (
-        <>
-          <div className="participant-count">
-            <p><i className="fas fa-door-open"></i> Room: {roomId}</p>
-            <p><i className="fas fa-user"></i> Your ID: {userId}</p>
-            <p><i className="fas fa-users"></i> Participants: {participants.length + 1}</p>
+        ) : (
+          <div className="conference-section">
+            <div className="main-video-area">
+              <div className="participant-count">
+                <p><FontAwesomeIcon icon={faDoorOpen} /> Room: {roomId}</p>
+                <p><FontAwesomeIcon icon={faUser} /> Your ID: {userId}</p>
+                <p><FontAwesomeIcon icon={faUsers} /> Participants: {participants.length + 1}</p>
+              </div>
 
+              <div className="local-video-container">
+                <h4><FontAwesomeIcon icon={faUserCircle} /> Your Video</h4>
+                <video ref={localVideoRef} autoPlay muted playsInline className="local-video" />
+              </div>
+
+              <div id="remote-container" className="remote-videos-container" />
+
+              <div className="video-controls">
+                <button
+                  onClick={toggleVideo}
+                  title={videoEnabled ? "Turn Off Video" : "Turn On Video"}
+                >
+                  <FontAwesomeIcon icon={videoEnabled ? faVideo : faVideoSlash} bounce />
+                </button>
+
+                <button
+                  onClick={toggleAudio}
+                  className="tooltip-btn"
+                  data-tooltip={audioEnabled ? "Mute Microphone" : "Unmute Microphone"}
+                >
+                  <FontAwesomeIcon icon={audioEnabled ? faMicrophone : faMicrophoneSlash} />
+                </button>
+
+                <button onClick={startScreenShare} title="Share Screen">
+                  <FontAwesomeIcon icon={faDesktop} spin />
+                </button>
+
+                <button onClick={leaveMeeting} title="Leave Meeting" className="leave-button">
+                  <FontAwesomeIcon icon={faDoorOpen} />
+                </button>
+              </div>
+            </div>
+
+            <div className="chat-section">
+              <h3 className="chat-title">
+                <FontAwesomeIcon icon={faComments} /> Meeting Chat
+              </h3>
+              {meetingId && userId && <ChatBox meetingId={meetingId} senderId={userId} />}
+            </div>
           </div>
-
-          <div className="local-video-container">
-            <h4><i className="fas fa-user-circle"></i> Your Video</h4>
-
-            <video ref={localVideoRef} autoPlay muted playsInline className="local-video" />
-          </div>
-
-          <div id="remote-container" className="remote-videos-container" />
-
-         <div className="video-controls">
-           <button
-             onClick={toggleVideo}
-             title={videoEnabled ? "Turn Off Video" : "Turn On Video"}
-           >
-             <FontAwesomeIcon icon={videoEnabled ? faVideo : faVideoSlash} bounce />
-           </button>
-
-          <button
-            onClick={toggleAudio}
-            className="tooltip-btn"
-            data-tooltip={audioEnabled ? "Mute Microphone" : "Unmute Microphone"}
-          >
-            <FontAwesomeIcon icon={audioEnabled ? faMicrophone : faMicrophoneSlash} />
-          </button>
-           <button onClick={startScreenShare} title="Share Screen">
-             <FontAwesomeIcon icon={faDesktop} spin />
-           </button>
-
-           <button onClick={leaveMeeting} title="Leave Meeting" className="leave-button">
-             <FontAwesomeIcon icon={faDoorOpen} />
-           </button>
-         </div>
-
-          <div style={{ marginTop: '40px' }}>
-            <h3 style={{ textAlign: "center" }}>
-              <i className="fas fa-comments"></i> Meeting Chat
-            </h3>
-
-            {meetingId && userId && <ChatBox meetingId={meetingId} senderId={userId} />}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
 export default VideoCall;
