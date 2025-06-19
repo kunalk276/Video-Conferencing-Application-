@@ -36,4 +36,10 @@ public class MeetingController {
         meetingService.softDeleteMeeting(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/code/{meetingCode}")
+    public ResponseEntity<MeetingDTO> getMeetingByCode(@PathVariable String meetingCode) {
+        return ResponseEntity.ok(meetingService.getMeetingByCode(meetingCode));
+    }
+
 }

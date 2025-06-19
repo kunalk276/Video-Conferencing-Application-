@@ -15,4 +15,5 @@ public class MeetingDTO {
     private String meetingCode;
     private LocalDateTime startTime;
     private Long hostId;
+    private String hostName;
 }

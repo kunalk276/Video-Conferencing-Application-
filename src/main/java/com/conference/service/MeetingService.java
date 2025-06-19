@@ -47,4 +47,10 @@ public class MeetingService {
         meeting.setDeleted(true);
         meetingRepository.save(meeting);
     }
+
+    public MeetingDTO getMeetingByCode(String meetingCode) {
+        Meeting meeting = meetingRepository.findByMeetingCodeAndDeletedFalse(meetingCode)
+                .orElseThrow(() -> new RuntimeException("Meeting not found with code: " + meetingCode));
+        return MeetingMapper.toDTO(meeting);
+    }
 }

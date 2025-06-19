@@ -1,164 +1,105 @@
-
-
-.video-container {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-}
-
-h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-button {
-  padding: 8px 16px;
-  cursor: pointer;
-  border: none;
-  border-radius: 4px;
-}
-
-button:hover {
-  background-color: #f0f0f0;
-}
-
-.room-id-text {
-  margin-top: 10px;
-}
-
-.room-id-input {
-  padding: 8px;
-  width: 250px;
-}
-
-.join-button {
-  margin-left: 10px;
-  padding: 8px 16px;
-}
-
-.participant-count {
-  margin-top: 20px;
-}
-
-.local-video-container h4 {
-  margin-bottom: 10px;
-}
-
-.local-video {
-  width: 250px;
-}
-
-.remote-videos-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.video-controls {
-  margin-top: 20px;
-}
-
-.video-controls button {
-  margin-right: 10px;
-}
-
-.leave-button {
-  background-color: red;
-  color: white;
-}
-
-/* videoCall.css */
-
 /* General Layout */
 .video-container {
-  padding: 20px;
-  font-family: 'Arial', sans-serif;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #ffffff;
+  border-radius: 16px;
+  max-width: 1100px;
+  margin: 30px auto;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
+/* Heading */
 h2 {
   font-size: 2rem;
-  color: #343a40;
-  margin-bottom: 20px;
+  color: #1a202c;
+  margin-bottom: 25px;
   text-align: center;
 }
 
-button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  border: none;
+/* Logo */
+.logo {
+  width: 90px;
+  height: auto;
+  display: block;
+  margin: 10px auto 30px;
+  filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.1));
 }
 
-button:hover {
-  background-color: #007bff;
-  color: white;
-}
-
-/* Room Info */
+/* Room Info & Join */
 .room-id-text {
-  margin-top: 10px;
   font-size: 1.2rem;
-  color: #495057;
   text-align: center;
+  color: #555;
+  margin-top: 15px;
 }
 
 .room-id-input {
-  padding: 10px;
-  width: 250px;
-  margin-bottom: 20px;
-  border-radius: 4px;
-  border: 1px solid #ced4da;
+  padding: 12px;
+  width: 260px;
+  margin: 10px auto;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  display: inline-block;
+  font-size: 1rem;
+}
+
+.join-button,
+button {
+  padding: 12px 22px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  margin: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
 }
 
 .join-button {
-  background-color: #28a745;
-  color: white;
+  background-color: #38a169;
+  color: #fff;
 }
 
 .join-button:hover {
-  background-color: #218838;
+  background-color: #2f855a;
 }
 
-/* Video Layout */
-.local-video-container {
+/* Participant Info */
+.participant-count {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #444;
+  margin-top: 10px;
+}
+
+/* Video Containers */
+.local-video-container,
+.remote-videos-container {
   margin-top: 30px;
   text-align: center;
 }
 
 .local-video-container h4 {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   margin-bottom: 10px;
-  color: #343a40;
+  color: #2d3748;
 }
 
-.local-video {
-  border: 2px solid #007bff;
-  border-radius: 8px;
-  width: 250px;
+.local-video,
+.remote-videos-container video {
+  width: 260px;
   height: 200px;
-  background-color: #ccc;
+  background-color: #e2e8f0;
+  border-radius: 12px;
+  border: 3px solid #4299e1;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Remote Videos */
 .remote-videos-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 20px;
   justify-content: center;
-  margin-top: 30px;
-}
-
-.remote-videos-container video {
-  width: 250px;
-  height: 200px;
-  border-radius: 8px;
-  background-color: #ccc;
 }
 
 /* Video Controls */
@@ -168,54 +109,60 @@ button:hover {
 }
 
 .video-controls button {
-  padding: 12px 24px;
-  font-size: 1.2rem;
+  padding: 12px 28px;
+  font-size: 1rem;
+  margin: 0 10px;
   border-radius: 50px;
-  margin: 0 15px;
-  transition: 0.3s ease;
-  background-color: #f8f9fa;
+  background-color: #edf2f7;
+  color: #1a202c;
+  transition: 0.3s;
 }
 
 .video-controls button:hover {
-  background-color: #007bff;
-  color: white;
+  background-color: #3182ce;
+  color: #fff;
 }
 
 .leave-button {
-  background-color: #dc3545;
-  color: rgb(199, 17, 29);
+  background-color: #e53e3e;
+  color: white;
 }
 
 .leave-button:hover {
-  background-color: #c82333;
+  background-color: #c53030;
 }
 
-/* Participant Info */
-.participant-count {
-  margin-top: 15px;
-  font-size: 1.2rem;
+/* Chat Section */
+h3 {
   text-align: center;
-  color: #495057;
-}
-
-/* Logo */
-.logo {
-  width: 100px;
-  height: auto;
-  display: block;
-  margin: 20px auto;
-  padding-bottom: 20px;
-  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.1));
+  margin-top: 40px;
+  font-size: 1.4rem;
+  color: #2d3748;
 }
 
 /* Badge */
 .participant-badge {
-  background-color: #007bff;
+  background-color: #4299e1;
   color: white;
   border-radius: 50%;
   padding: 8px 12px;
-  font-size: 1rem;
-  display: inline-block;
-  margin-left: 10px;
-  text-align: center;
+  font-size: 0.9rem;
+  margin-left: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .local-video, .remote-videos-container video {
+    width: 100%;
+    height: auto;
+  }
+
+  .room-id-input {
+    width: 90%;
+  }
+
+  .video-controls button {
+    margin: 10px 5px;
+    padding: 10px 16px;
+  }
 }
