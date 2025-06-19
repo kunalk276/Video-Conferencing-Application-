@@ -50,6 +50,7 @@ const VideoCall = () => {
 
   const handleJoinRoom = async () => {
     if (!roomId) return alert("Enter Room ID");
+
     try {
       const res = await fetch(`${BASE_URL}/meetings/code/${roomId}`);
       const meeting = await res.json();
@@ -63,57 +64,58 @@ const VideoCall = () => {
         sendSignal({ type: "join", roomId, sender: userId });
       };
 
-     socketRef.current.onmessage = async (msg) => {
-       const data = JSON.parse(msg.data);
+      socketRef.current.onmessage = async (msg) => {
+        const data = JSON.parse(msg.data);
+        if (data.sender === userId) return;
 
-       if (data.sender === userId) return;
+        switch (data.type) {
+          case "join":
+            console.log("🔁 New user joined, sending offer to:", data.sender);
+            createOffer(data.sender);
+            break;
 
-       switch (data.type) {
-         case "join":
-           console.log("🔁 New user joined, sending offer to:", data.sender);
-           createOffer(data.sender);
-           break;
+          case "offer":
+            console.log("📨 Received offer from:", data.sender);
+            await handleOffer(data);
+            break;
 
-         case "offer":
-           console.log("📨 Received offer from:", data.sender);
-           await handleOffer(data);
-           break;
+          case "answer":
+            console.log("📨 Received answer from:", data.sender);
+            await peersRef.current[data.sender]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
+            break;
 
-         case "answer":
-           console.log("📨 Received answer from:", data.sender);
-           await peersRef.current[data.sender]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
-           break;
+          case "ice-candidate":
+            console.log("📨 Received ICE candidate from:", data.sender);
+            await peersRef.current[data.sender]?.addIceCandidate(new RTCIceCandidate(data.candidate));
+            break;
 
-         case "ice-candidate":
-           console.log("📨 Received ICE candidate from:", data.sender);
-           await peersRef.current[data.sender]?.addIceCandidate(new RTCIceCandidate(data.candidate));
-           break;
+          case "user-left":
+            console.log("👋 User left:", data.sender);
+            const leftId = data.sender;
 
-         case "user-left":
-           console.log("👋 User left:", data.sender);
-           const leftId = data.sender;
+            const video = remoteVideosRef.current[leftId];
+            if (video && video.parentNode) {
+              video.parentNode.removeChild(video);
+            }
+            delete remoteVideosRef.current[leftId];
 
+            setParticipants((prev) => prev.filter((id) => id !== leftId));
 
-           const video = remoteVideosRef.current[leftId];
-           if (video && video.parentNode) {
-             video.parentNode.removeChild(video);
-           }
-           delete remoteVideosRef.current[leftId];
+            if (peersRef.current[leftId]) {
+              peersRef.current[leftId].close();
+              delete peersRef.current[leftId];
+            }
+            break;
 
-
-           setParticipants((prev) => prev.filter((id) => id !== leftId));
-
-
-           if (peersRef.current[leftId]) {
-             peersRef.current[leftId].close();
-             delete peersRef.current[leftId];
-           }
-           break;
-
-         default:
-           console.warn("❓ Unknown message type:", data.type);
-       }
-     };
+          default:
+            console.warn("❓ Unknown message type:", data.type);
+        }
+      };
+    } catch (err) {
+      alert("Join room failed");
+      console.error("Join error:", err);
+    }
+  };
 
 
   const startLocalStream = async () => {
