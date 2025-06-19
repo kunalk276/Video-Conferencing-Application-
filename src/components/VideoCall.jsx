@@ -3,6 +3,20 @@ import './VideoCall.css';
 import { v4 as uuidv4 } from "uuid";
 import ChatBox from './ChatBox';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faVideo,
+  faVideoSlash,
+  faMicrophone,
+  faMicrophoneSlash,
+  faDesktop,
+  faDoorOpen,
+  faPlus,
+  faSignInAlt,
+  faCommentDots,
+} from '@fortawesome/free-solid-svg-icons';
+
+
 const BASE_URL = "https://video-conferencing-application-gmsl.onrender.com";
 
 const VideoCall = () => {
@@ -281,6 +295,11 @@ const startScreenShare = async () => {
     document.getElementById("remote-container").innerHTML = "";
   };
 
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+
   return (
     <div className="video-container">
       <img
@@ -310,29 +329,49 @@ const startScreenShare = async () => {
       ) : (
         <>
           <div className="participant-count">
-            <p>🏠 Room: {roomId}</p>
-            <p>👤 Your ID: {userId}</p>
-            <p>👥 Participants: {participants.length + 1}</p>
+            <p><i className="fas fa-door-open"></i> Room: {roomId}</p>
+            <p><i className="fas fa-user"></i> Your ID: {userId}</p>
+            <p><i className="fas fa-users"></i> Participants: {participants.length + 1}</p>
+
           </div>
 
           <div className="local-video-container">
-            <h4>🎥 Your Video</h4>
+            <h4><i className="fas fa-user-circle"></i> Your Video</h4>
+
             <video ref={localVideoRef} autoPlay muted playsInline className="local-video" />
           </div>
 
           <div id="remote-container" className="remote-videos-container" />
 
-          <div className="video-controls">
-            <button onClick={toggleVideo}>{videoEnabled ? "📷 Turn Off Video" : "📷 Turn On Video"}</button>
-            <button onClick={toggleAudio}>{audioEnabled ? "🔊 Mute Mic" : "🔇 Unmute Mic"}</button>
-            <button onClick={startScreenShare}>🖥️ Share Screen</button>
-            <button onClick={leaveMeeting} className="leave-button">❌ Leave</button>
+         <div className="video-controls">
+           <button
+             onClick={toggleVideo}
+             title={videoEnabled ? "Turn Off Video" : "Turn On Video"}
+           >
+             <FontAwesomeIcon icon={videoEnabled ? faVideo : faVideoSlash} bounce />
+           </button>
 
+          <button
+            onClick={toggleAudio}
+            className="tooltip-btn"
+            data-tooltip={audioEnabled ? "Mute Microphone" : "Unmute Microphone"}
+          >
+            <FontAwesomeIcon icon={audioEnabled ? faMicrophone : faMicrophoneSlash} />
+          </button>
+           <button onClick={startScreenShare} title="Share Screen">
+             <FontAwesomeIcon icon={faDesktop} spin />
+           </button>
 
-          </div>
+           <button onClick={leaveMeeting} title="Leave Meeting" className="leave-button">
+             <FontAwesomeIcon icon={faDoorOpen} />
+           </button>
+         </div>
 
           <div style={{ marginTop: '40px' }}>
-            <h3 style={{ textAlign: "center" }}>💬 Meeting Chat</h3>
+            <h3 style={{ textAlign: "center" }}>
+              <i className="fas fa-comments"></i> Meeting Chat
+            </h3>
+
             {meetingId && userId && <ChatBox meetingId={meetingId} senderId={userId} />}
           </div>
         </>

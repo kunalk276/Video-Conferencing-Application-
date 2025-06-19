@@ -166,3 +166,20 @@ h3 {
     padding: 10px 16px;
   }
 }
+.tooltip-btn {
+  position: relative;
+}
+
+.tooltip-btn:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+}
