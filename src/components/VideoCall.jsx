@@ -5,15 +5,16 @@ import ChatBox from './ChatBox';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faVideo,
-  faVideoSlash,
   faMicrophone,
   faMicrophoneSlash,
+  faVideo,
+  faVideoSlash,
   faDesktop,
   faDoorOpen,
-  faPlus,
-  faSignInAlt,
-  faCommentDots,
+  faUser,
+  faUsers,
+  faComments,
+  faUserCircle
 } from '@fortawesome/free-solid-svg-icons';
 
 
