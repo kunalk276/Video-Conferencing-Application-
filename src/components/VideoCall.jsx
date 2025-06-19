@@ -1,136 +1,15 @@
-// import React, { useEffect, useRef, useState } from "react";
-// import { v4 as uuidv4 } from "uuid";
-
-// const VideoCall = () => {
-//   const localVideoRef = useRef();
-//   const remoteVideoRef = useRef();
-//   const peerRef = useRef();
-//   const socketRef = useRef();
-//   const [roomId] = useState("room1");
-//   const [userId] = useState(uuidv4());
-
-//   useEffect(() => {
-//     // Connect WebSocket
-//     socketRef.current = new WebSocket("ws://localhost:8080/signal");
-
-//     socketRef.current.onmessage = async (message) => {
-//       const data = JSON.parse(message.data);
-
-//       switch (data.type) {
-//         case "offer":
-//           await handleOffer(data);
-//           break;
-//         case "answer":
-//           await peerRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
-//           break;
-//         case "ice-candidate":
-//           await peerRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-//           break;
-//         default:
-//           break;
-//       }
-//     };
-
-//     startLocalStream();
-
-//     return () => socketRef.current?.close();
-//   }, []);
-
-//   const startLocalStream = async () => {
-//     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-//     localVideoRef.current.srcObject = stream;
-
-//     // Setup PeerConnection
-//     setupPeer(stream);
-//   };
-
-//   const setupPeer = (stream) => {
-//     const config = {
-//       iceServers: [
-//         { urls: "stun:stun.l.google.com:19302" } // Add TURN servers if needed
-//       ],
-//     };
-
-//     peerRef.current = new RTCPeerConnection(config);
-
-//     // Send ICE candidates to peer
-//     peerRef.current.onicecandidate = (e) => {
-//       if (e.candidate) {
-//         sendSignal({
-//           type: "ice-candidate",
-//           candidate: e.candidate,
-//           target: roomId,
-//           sender: userId,
-//         });
-//       }
-//     };
-
-//     // Show remote stream
-//     peerRef.current.ontrack = (e) => {
-//       remoteVideoRef.current.srcObject = e.streams[0];
-//     };
-
-//     // Add local tracks
-//     stream.getTracks().forEach((track) => {
-//       peerRef.current.addTrack(track, stream);
-//     });
-
-//     // Create offer
-//     peerRef.current.onnegotiationneeded = async () => {
-//       const offer = await peerRef.current.createOffer();
-//       await peerRef.current.setLocalDescription(offer);
-
-//       sendSignal({
-//         type: "offer",
-//         sdp: offer,
-//         target: roomId,
-//         sender: userId,
-//       });
-//     };
-//   };
-
-//   const handleOffer = async (data) => {
-//     if (!peerRef.current) {
-//       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-//       localVideoRef.current.srcObject = stream;
-//       setupPeer(stream);
-//     }
-
-//     await peerRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
-//     const answer = await peerRef.current.createAnswer();
-//     await peerRef.current.setLocalDescription(answer);
-
-//     sendSignal({
-//       type: "answer",
-//       sdp: answer,
-//       target: data.sender,
-//       sender: userId,
-//     });
-//   };
-
-//   const sendSignal = (data) => {
-//     socketRef.current.send(JSON.stringify(data));
-//   };
-
-//   return (
-//     <div className="video-call">
-//       <video ref={localVideoRef} autoPlay muted playsInline style={{ width: "300px" }} />
-//       <video ref={remoteVideoRef} autoPlay playsInline style={{ width: "300px" }} />
-//     </div>
-//   );
-// };
-
-
+// VideoCall.js
 import React, { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import './VideoCall.css';
-import ChatBox from './ChatBox';
+import "./VideoCall.css";
+import ChatBox from "./ChatBox";
 
 const BASE_URL = "https://video-conferencing-application-gmsl.onrender.com";
 
 const VideoCall = () => {
   const localVideoRef = useRef();
   const remoteVideosRef = useRef({});
+  const audioCanvasRef = useRef();
   const socketRef = useRef();
   const peersRef = useRef({});
   const streamRef = useRef(null);
@@ -148,17 +27,11 @@ const VideoCall = () => {
     try {
       const meetingCode = uuidv4().slice(0, 8).toUpperCase();
       const hostId = localStorage.getItem("userId");
-
-      if (!hostId) {
-        alert("User not logged in");
-        return;
-      }
+      if (!hostId) return alert("User not logged in");
 
       const response = await fetch(`${BASE_URL}/meetings`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: "My Video Meeting",
           meetingCode,
@@ -167,10 +40,7 @@ const VideoCall = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create meeting");
-      }
-
+      if (!response.ok) throw new Error("Failed to create meeting");
       const meeting = await response.json();
       setRoomId(meeting.meetingCode);
       setCreatedRoomId(meeting.meetingCode);
@@ -181,10 +51,7 @@ const VideoCall = () => {
   };
 
   const handleJoinRoom = async () => {
-    if (!roomId) {
-      alert("Please enter a room ID");
-      return;
-    }
+    if (!roomId) return alert("Please enter a room ID");
 
     setJoined(true);
     socketRef.current = new WebSocket("wss://video-conferencing-application-gmsl.onrender.com/ws/signaling");
@@ -200,17 +67,16 @@ const VideoCall = () => {
       if (sender === userId) return;
 
       switch (data.type) {
-        case "join":
-          createOffer(sender);
-          break;
-        case "offer":
-          await handleOffer(data);
-          break;
+        case "join": createOffer(sender); break;
+        case "offer": await handleOffer(data); break;
         case "answer":
-          await peersRef.current[sender].setRemoteDescription(new RTCSessionDescription(data.sdp));
+          await peersRef.current[sender]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
           break;
         case "ice-candidate":
           await peersRef.current[sender]?.addIceCandidate(new RTCIceCandidate(data.candidate));
+          break;
+        case "mic-toggle":
+          setParticipants(prev => prev.map(p => p.id === sender ? { ...p, audioEnabled: data.audioEnabled } : p));
           break;
         default:
           break;
@@ -222,25 +88,47 @@ const VideoCall = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       streamRef.current = stream;
-
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      setupMicVisualizer(stream);
     } catch (err) {
       console.error("Error accessing media devices.", err);
       alert("Could not access camera or microphone.");
     }
   };
 
+  const setupMicVisualizer = (stream) => {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    const source = audioCtx.createMediaStreamSource(stream);
+    source.connect(analyser);
+    const canvas = audioCanvasRef.current;
+    const ctx = canvas.getContext("2d");
+    analyser.fftSize = 256;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const draw = () => {
+      requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#00f";
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i] / 2;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        x += barWidth + 1;
+      }
+    };
+    draw();
+  };
+
   const createPeer = (targetId) => {
-    const peer = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
+    const peer = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
 
     peer.onicecandidate = (e) => {
-      if (e.candidate) {
-        sendSignal({ type: "ice-candidate", candidate: e.candidate, sender: userId, target: targetId });
-      }
+      if (e.candidate) sendSignal({ type: "ice-candidate", candidate: e.candidate, sender: userId, target: targetId });
     };
 
     peer.ontrack = (e) => {
@@ -252,14 +140,11 @@ const VideoCall = () => {
         video.srcObject = e.streams[0];
         remoteVideosRef.current[targetId] = video;
         document.getElementById("remote-container").appendChild(video);
-        setParticipants((prev) => [...new Set([...prev, targetId])]);
+        setParticipants(prev => [...prev, { id: targetId, audioEnabled: true }]);
       }
     };
 
-    streamRef.current.getTracks().forEach((track) => {
-      peer.addTrack(track, streamRef.current);
-    });
-
+    streamRef.current.getTracks().forEach((track) => peer.addTrack(track, streamRef.current));
     peersRef.current[targetId] = peer;
     return peer;
   };
@@ -296,6 +181,7 @@ const VideoCall = () => {
     if (audioTrack) {
       audioTrack.enabled = !audioTrack.enabled;
       setAudioEnabled(audioTrack.enabled);
+      sendSignal({ type: "mic-toggle", sender: userId, audioEnabled: audioTrack.enabled });
     }
   };
 
@@ -303,13 +189,11 @@ const VideoCall = () => {
     streamRef.current?.getTracks().forEach(track => track.stop());
     Object.values(peersRef.current).forEach(peer => peer.close());
     socketRef.current?.close();
-
     setJoined(false);
     setParticipants([]);
     peersRef.current = {};
     remoteVideosRef.current = {};
     streamRef.current = null;
-
     const container = document.getElementById("remote-container");
     if (container) container.innerHTML = "";
   };
@@ -319,53 +203,40 @@ const VideoCall = () => {
       <img src="https://img.freepik.com/premium-vector/facetime-app-icon-video-audio-chatting-platform_277909-629.jpg?w=900" alt="Video Call Logo" className="logo" />
       <h2>Video Meeting</h2>
 
-      {!joined && (
+      {!joined ? (
         <>
           <button onClick={handleCreateRoom}>Create Room</button>
-          {createdRoomId && (
-            <p className="room-id-text">
-              Room ID: <strong>{createdRoomId}</strong>
-            </p>
-          )}
-
+          {createdRoomId && <p className="room-id-text">Room ID: <strong>{createdRoomId}</strong></p>}
           <div className="join-room">
-            <input
-              type="text"
-              placeholder="Enter Room ID"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-              className="room-id-input"
-            />
-            <button onClick={handleJoinRoom} className="join-button">
-              Join Room
-            </button>
+            <input type="text" placeholder="Enter Room ID" value={roomId} onChange={(e) => setRoomId(e.target.value)} className="room-id-input" />
+            <button onClick={handleJoinRoom} className="join-button">Join Room</button>
           </div>
         </>
-      )}
-
-      {joined && (
+      ) : (
         <>
           <p className="participant-count"><strong>Room:</strong> {roomId}</p>
           <p className="participant-count"><strong>Your ID:</strong> {userId}</p>
-          <p className="participant-count"><strong>Participants:</strong> {participants.length + 1} (including you)</p>
+          <p className="participant-count"><strong>Participants:</strong> {participants.length + 1}</p>
 
           <div className="local-video-container">
             <h4>Local Video</h4>
             <video ref={localVideoRef} autoPlay muted playsInline className="local-video" />
           </div>
 
-          <div id="remote-container" className="remote-videos-container" />
+          <canvas ref={audioCanvasRef} width="300" height="40" style={{ marginTop: "10px" }} />
+
+          <div id="remote-container" className="remote-videos-container">
+            {participants.map(p => (
+              <div key={p.id} className="remote-user-box">
+                <span>{p.id}</span> <span>{p.audioEnabled ? "🎙️" : "🔇"}</span>
+              </div>
+            ))}
+          </div>
 
           <div className="video-controls">
-            <button onClick={toggleVideo}>
-              {videoEnabled ? "Turn Off Video" : "Turn On Video"}
-            </button>
-            <button onClick={toggleAudio}>
-              {audioEnabled ? "Mute" : "Unmute"}
-            </button>
-            <button onClick={leaveMeeting} className="leave-button">
-              Leave Meeting
-            </button>
+            <button onClick={toggleVideo}>{videoEnabled ? "Turn Off Video" : "Turn On Video"}</button>
+            <button onClick={toggleAudio}>{audioEnabled ? "Mute" : "Unmute"}</button>
+            <button onClick={leaveMeeting} className="leave-button">Leave Meeting</button>
           </div>
 
           <div style={{ marginTop: '20px' }}>
