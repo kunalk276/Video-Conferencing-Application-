@@ -7,7 +7,7 @@ const ChatBox = ({ meetingId, senderId }) => {
 
   const fetchMessages = async () => {
     try {
-      const res = await axios.get(`http://localhost:8080/messages/meeting/${meetingId}`);
+      const res = await axios.get(`https://video-conferencing-application-gmsl.onrender.com/messages/meeting/${meetingId}`);
       setMessages(res.data.filter(msg => !msg.deleted));
     } catch (err) {
       console.error('Error fetching messages:', err);
@@ -18,31 +18,31 @@ const ChatBox = ({ meetingId, senderId }) => {
     if (!newMessage.trim()) return;
 
     try {
-      await axios.post('http://localhost:8080/messages', {
+      await axios.post('https://video-conferencing-application-gmsl.onrender.com/messages', {
         content: newMessage,
         timestamp: new Date().toISOString(),
         senderId,
         meetingId,
       });
       setNewMessage('');
-      fetchMessages();
+      fetchMessages(); // Immediately refresh messages
     } catch (err) {
       console.error('Error sending message:', err);
     }
   };
 
   useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5000); // refresh every 5s
+    fetchMessages(); // initial fetch
+    const interval = setInterval(fetchMessages, 5000); // refresh every 5 seconds
     return () => clearInterval(interval);
   }, [meetingId]);
 
   return (
     <div style={styles.chatContainer}>
       <div style={styles.messages}>
-        {messages.map(msg => (
+        {messages.map((msg) => (
           <div key={msg.id} style={styles.message}>
-            <strong>{msg.senderName || 'User'}:</strong> {msg.content}
+            <strong>{msg.senderName || msg.senderId}:</strong> {msg.content}
           </div>
         ))}
       </div>

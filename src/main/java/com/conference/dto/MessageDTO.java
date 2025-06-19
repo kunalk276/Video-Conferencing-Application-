@@ -15,4 +15,7 @@ public class MessageDTO {
     private LocalDateTime timestamp;
     private Long senderId;
     private Long meetingId;
+    private String senderName;
+    private boolean deleted;
+
 }
