@@ -63,29 +63,58 @@ const VideoCall = () => {
         sendSignal({ type: "join", roomId, sender: userId });
       };
 
-      socketRef.current.onmessage = async (msg) => {
-        const data = JSON.parse(msg.data);
-        if (data.sender === userId) return;
+     socketRef.current.onmessage = async (msg) => {
+       const data = JSON.parse(msg.data);
 
-        switch (data.type) {
-          case "join":
-            createOffer(data.sender);
-            break;
-          case "offer":
-            await handleOffer(data);
-            break;
-          case "answer":
-            await peersRef.current[data.sender]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
-            break;
-          case "ice-candidate":
-            await peersRef.current[data.sender]?.addIceCandidate(new RTCIceCandidate(data.candidate));
-            break;
-        }
-      };
-    } catch (err) {
-      alert("Join room failed");
-    }
-  };
+       if (data.sender === userId) return;
+
+       switch (data.type) {
+         case "join":
+           console.log("🔁 New user joined, sending offer to:", data.sender);
+           createOffer(data.sender);
+           break;
+
+         case "offer":
+           console.log("📨 Received offer from:", data.sender);
+           await handleOffer(data);
+           break;
+
+         case "answer":
+           console.log("📨 Received answer from:", data.sender);
+           await peersRef.current[data.sender]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
+           break;
+
+         case "ice-candidate":
+           console.log("📨 Received ICE candidate from:", data.sender);
+           await peersRef.current[data.sender]?.addIceCandidate(new RTCIceCandidate(data.candidate));
+           break;
+
+         case "user-left":
+           console.log("👋 User left:", data.sender);
+           const leftId = data.sender;
+
+
+           const video = remoteVideosRef.current[leftId];
+           if (video && video.parentNode) {
+             video.parentNode.removeChild(video);
+           }
+           delete remoteVideosRef.current[leftId];
+
+
+           setParticipants((prev) => prev.filter((id) => id !== leftId));
+
+
+           if (peersRef.current[leftId]) {
+             peersRef.current[leftId].close();
+             delete peersRef.current[leftId];
+           }
+           break;
+
+         default:
+           console.warn("❓ Unknown message type:", data.type);
+       }
+     };
+
 
   const startLocalStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -93,32 +122,64 @@ const VideoCall = () => {
     if (localVideoRef.current) localVideoRef.current.srcObject = stream;
   };
 
-  const createPeer = (targetId) => {
-    const peer = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+ const createPeer = (targetId) => {
+   const peer = new RTCPeerConnection({
+     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+   });
 
-    peer.onicecandidate = (e) => {
-      if (e.candidate) {
-        sendSignal({ type: "ice-candidate", candidate: e.candidate, sender: userId, target: targetId });
-      }
-    };
 
-    peer.ontrack = (e) => {
-      if (!remoteVideosRef.current[targetId]) {
-        const video = document.createElement("video");
-        video.autoplay = true;
-        video.playsInline = true;
-        video.width = 250;
-        video.srcObject = e.streams[0];
-        remoteVideosRef.current[targetId] = video;
-        document.getElementById("remote-container").appendChild(video);
-        setParticipants((prev) => [...new Set([...prev, targetId])]);
-      }
-    };
+   console.log(`🔧 Creating peer connection to: ${targetId}`);
 
-    streamRef.current.getTracks().forEach((track) => peer.addTrack(track, streamRef.current));
-    peersRef.current[targetId] = peer;
-    return peer;
-  };
+
+   peer.onicecandidate = (e) => {
+     if (e.candidate) {
+       console.log(`🧊 Sending ICE candidate to: ${targetId}`);
+       sendSignal({
+         type: "ice-candidate",
+         candidate: e.candidate,
+         sender: userId,
+         target: targetId,
+       });
+     }
+   };
+
+
+   peer.ontrack = (e) => {
+     console.log(`🎥🔊 Received remote track from ${targetId}`);
+     const stream = e.streams[0];
+     let videoEl = remoteVideosRef.current[targetId];
+
+     if (!videoEl) {
+       videoEl = document.createElement("video");
+       videoEl.autoplay = true;
+       videoEl.playsInline = true;
+       videoEl.width = 250;
+       videoEl.controls = true; // Optional: add controls for testing
+       videoEl.srcObject = stream;
+
+       remoteVideosRef.current[targetId] = videoEl;
+
+       const container = document.getElementById("remote-container");
+       if (container) container.appendChild(videoEl);
+     }
+
+
+     setParticipants((prev) => [...new Set([...prev, targetId])]);
+   };
+
+
+   if (streamRef.current) {
+     streamRef.current.getTracks().forEach((track) => {
+       console.log(`🔄 Adding local ${track.kind} track to peer for ${targetId}`);
+       peer.addTrack(track, streamRef.current);
+     });
+   } else {
+     console.warn("⚠️ streamRef.current is null when creating peer.");
+   }
+
+   peersRef.current[targetId] = peer;
+   return peer;
+ };
 
   const createOffer = async (targetId) => {
     const peer = createPeer(targetId);
