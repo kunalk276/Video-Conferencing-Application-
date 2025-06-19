@@ -114,7 +114,12 @@ const VideoCall = () => {
 
             const video = remoteVideosRef.current[leftId];
             if (video && video.parentNode) {
-              video.parentNode.removeChild(video);
+              video.classList.add("fade-out");
+              setTimeout(() => {
+                if (video.parentNode) {
+                  video.parentNode.removeChild(video);
+                }
+              }, 500);
             }
             delete remoteVideosRef.current[leftId];
 
@@ -243,7 +248,7 @@ const startScreenShare = async () => {
 
     const screenTrack = screenStream.getVideoTracks()[0];
 
-    // Replace video track in all peer connections
+
     Object.values(peersRef.current).forEach((peer) => {
       const senders = peer.getSenders();
       const videoSender = senders.find(sender => sender.track?.kind === 'video');
@@ -252,12 +257,12 @@ const startScreenShare = async () => {
       }
     });
 
-    // Replace the local video display
+
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = screenStream;
     }
 
-    // When screen share stops, revert back to webcam
+
     screenTrack.onended = async () => {
       const webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       const newVideoTrack = webcamStream.getVideoTracks()[0];
@@ -285,6 +290,10 @@ const startScreenShare = async () => {
 
 
   const leaveMeeting = () => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      sendSignal({ type: "user-left", sender: userId });
+    }
+
     streamRef.current?.getTracks().forEach((t) => t.stop());
     Object.values(peersRef.current).forEach((p) => p.close());
     socketRef.current?.close();
@@ -297,6 +306,7 @@ const startScreenShare = async () => {
 
     document.getElementById("remote-container").innerHTML = "";
   };
+
 
 
 
@@ -371,9 +381,15 @@ const startScreenShare = async () => {
                   <FontAwesomeIcon icon={faDesktop} spin />
                 </button>
 
-                <button onClick={leaveMeeting} title="Leave Meeting" className="leave-button">
-                  <FontAwesomeIcon icon={faDoorOpen} />
-                </button>
+               <button
+                 onClick={leaveMeeting}
+                 title="Leave Meeting"
+                 className="leave-button"
+                 style={{ backgroundColor: "#e74c3c", color: "white" }}
+               >
+                 <FontAwesomeIcon icon={faDoorOpen} />
+               </button>
+
               </div>
             </div>
 
