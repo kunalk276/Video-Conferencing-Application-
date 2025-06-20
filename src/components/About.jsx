@@ -3,10 +3,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import SharedLayout from './SharedLayout';
 import './About.css';
-import { FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
+import { FaFacebook, FaTwitter, FaLinkedin, } from 'react-icons/fa';
 
-
-import { FaLinkedin } from 'react-icons/fa';
 
 const teamMembers = [
   {
