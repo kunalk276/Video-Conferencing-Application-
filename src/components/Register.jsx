@@ -2,7 +2,8 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import './Register.css'; // External CSS file for styles
+import './Register.css';
+import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
   const schema = yup.object().shape({
@@ -27,18 +28,35 @@ const Register = () => {
     role: yup.string().required("Role is required"),
   });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
+  // const {
+  //   register,
+  //   handleSubmit,
+  //   formState: { errors },
+  //   reset,
+  // } = useForm({
+  //   resolver: yupResolver(schema),
+  // });
+
+const {
+  register,
+  handleSubmit,
+  formState: { errors },
+  reset,
+} = useForm({
+  resolver: yupResolver(schema),
+  defaultValues: {
+    role: "USER", 
+  },
+});
 
   
   const onSubmit = async (data) => {
   try {
+
+     const userData = {
+      ...data,
+      role: "USER",
+    };
     const response = await fetch("https://video-conferencing-application-gmsl.onrender.com/users", {
       method: "POST",
       headers: {
@@ -100,8 +118,8 @@ const Register = () => {
             {errors.password && <p>{errors.password.message}</p>}
           </div>
 
-         {/* Role */}
-<div>
+
+{/* <div>
   <label htmlFor="role">Role</label>
   <select id="role" {...register("role")}>
     <option value="">Select Role</option>
@@ -109,7 +127,9 @@ const Register = () => {
     <option value="ADMIN">ADMIN</option>
   </select>
   {errors.role && <p>{errors.role.message}</p>}
-</div>
+</div> */}
+
+
 
 
           {/* Submit */}
@@ -117,6 +137,13 @@ const Register = () => {
             <button type="submit">Register</button>
           </div>
         </form>
+        <div className="login-redirect">
+          <p>Already have an account?</p>
+          <Link to="/login" className="login-link">
+            <button className="login-button">Login</button>
+          </Link>
+        </div>
+
       </div>
     </div>
   );
