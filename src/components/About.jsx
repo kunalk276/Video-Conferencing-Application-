@@ -6,13 +6,22 @@ import './About.css';
 import { FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
 
 
+import { FaLinkedin } from 'react-icons/fa';
+
 const teamMembers = [
   {
     name: 'Kunal Kadam',
     role: 'Frontend & Backend Developer',
     img: 'https://media.licdn.com/dms/image/v2/D4D03AQETb0F4U8_wmQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1718685917105?e=1755734400&v=beta&t=4QsOjSTCuwC8119WuAr-PgJyIdmCI69G-cgKXd6i_5Q',
     socials: [
-      <FaLinkedin title="LinkedIn" className="social-icon" />
+      <a
+        href="https://www.linkedin.com/in/kunaldkadam/"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="LinkedIn"
+      >
+        <FaLinkedin className="social-icon" />
+      </a>
     ]
   },
   {
@@ -20,10 +29,18 @@ const teamMembers = [
     role: 'UI/UX Designer',
     img: 'https://img.freepik.com/free-photo/3d-portrait-high-school-teenager_23-2150793939.jpg?ga=GA1.1.1336599627.1716147389&semt=ais_hybrid&w=740',
     socials: [
-      <FaLinkedin title="LinkedIn" className="social-icon" />
+      <a
+        href="https://www.linkedin.com/in/kunaldkadam/"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="LinkedIn"
+      >
+        <FaLinkedin className="social-icon" />
+      </a>
     ]
   }
 ];
+
 const About = () => {
   return (
     <SharedLayout>
