@@ -54,6 +54,12 @@ const Login = ({ onLoginSuccess }) => {
           {successMessage && <p className="success-message">{successMessage}</p>}
           <button type="submit" className="login-button">Login</button>
         </form>
+        <div className="register-redirect">
+                <p>Don't have an account?</p>
+                <Link to="/register" className="register-link">
+                  <button className="register-button">Register</button>
+                </Link>
+              </div>
       </div>
     </div>
   );

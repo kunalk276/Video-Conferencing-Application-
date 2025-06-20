@@ -93,12 +93,14 @@ const Home = () => {
         >
           Connect from anywhere with crystal-clear audio and total privacy.
         </motion.p>
-        <motion.button
-          className="get-started-btn"
-          whileHover={{ scale: 1.05 }}
-        >
-          Get Started
-        </motion.button>
+        <Link to="/login">
+          <motion.button
+            className="get-started-btn"
+            whileHover={{ scale: 1.05 }}
+          >
+            Get Started
+          </motion.button>
+        </Link>
         <div className="animated-bg"></div>
       </header>
 
