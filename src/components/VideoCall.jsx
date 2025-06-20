@@ -329,18 +329,17 @@ const startScreenShare = async () => {
 />
 
    return (
+    
       <div className="video-container">
-        <header className="header">
-          <img
-            src="https://img.freepik.com/premium-vector/facetime-app-icon-video-audio-chatting-platform_277909-629.jpg?w=900"
-            alt="Logo"
-            className="logo"
-          />
-          <h2>Video Conferencing</h2>
-        </header>
-
+        <div className="header-left">
+    <div className="logo glow">
+      <span className="logo-icon">🔵</span>
+      <span className="logo-text">Meet<span>Pro</span></span>
+    </div>
+</div>
         {!joined ? (
-          <div className="join-section">
+          <div classN
+          ame="join-section">
             <button onClick={handleCreateRoom} className="join-button">➕ Create Room</button>
             {createdRoomId && (
               <p className="room-id-text">
@@ -410,7 +409,8 @@ const startScreenShare = async () => {
               <h3 className="chat-title">
                 <FontAwesomeIcon icon={faComments} /> Meeting Chat
               </h3>
-              {meetingId && userId && <ChatBox meetingId={meetingId} senderId={userId} />}
+              {meetingId && userId && username && (<ChatBox meetingId={meetingId} senderId={userId} senderName={username} />
+)}
             </div>
           </div>
         )}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const ChatBox = ({ meetingId, senderId }) => {
+const ChatBox = ({ meetingId, senderId, senderName }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
@@ -23,17 +23,18 @@ const ChatBox = ({ meetingId, senderId }) => {
         timestamp: new Date().toISOString(),
         senderId,
         meetingId,
+        senderName, 
       });
       setNewMessage('');
-      fetchMessages(); // Immediately refresh messages
+      fetchMessages();
     } catch (err) {
       console.error('Error sending message:', err);
     }
   };
 
   useEffect(() => {
-    fetchMessages(); // initial fetch
-    const interval = setInterval(fetchMessages, 5000); // refresh every 5 seconds
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
   }, [meetingId]);
 

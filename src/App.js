@@ -6,6 +6,9 @@ import Register from './components/Register';
 import Login from './components/Login';
 import VideoCall from './components/VideoCall';
 import ChatBox from './components/ChatBox';
+import About from './components/About';
+import Contact from './components/Contact';
+import PrivacyPolicy from './components/PrivacyPolicy';
 import './index.css';  
 const App = () => {
   return (
@@ -17,6 +20,9 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/video-call" element={<VideoCall />} />
         <Route path="/ChatBox" element={<ChatBox />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
       </Routes>
     </Router>
     
