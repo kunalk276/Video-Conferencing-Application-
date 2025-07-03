@@ -85,7 +85,8 @@ button {
   color: #2d3748;
 }
 
-.local-video,
+.camera-video,
+.screen-video,
 .remote-videos-container video {
   width: 260px;
   height: 200px;
@@ -93,6 +94,7 @@ button {
   border-radius: 12px;
   border: 3px solid #4299e1;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
 }
 
 .remote-videos-container {
@@ -100,6 +102,7 @@ button {
   flex-wrap: wrap;
   gap: 20px;
   justify-content: center;
+  margin-top: 30px;
 }
 
 /* Video Controls */
@@ -150,22 +153,7 @@ h3 {
   margin-left: 8px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .local-video, .remote-videos-container video {
-    width: 100%;
-    height: auto;
-  }
-
-  .room-id-input {
-    width: 90%;
-  }
-
-  .video-controls button {
-    margin: 10px 5px;
-    padding: 10px 16px;
-  }
-}
+/* Tooltip */
 .tooltip-btn {
   position: relative;
 }
@@ -184,19 +172,22 @@ h3 {
   white-space: nowrap;
 }
 
-
+/* Layout */
 .conference-section {
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .main-video-area {
   flex: 3;
+  min-width: 0;
 }
 
 .chat-section {
   flex: 1;
+  min-width: 250px;
   max-width: 300px;
   background: #f4f4f4;
   padding: 15px;
@@ -215,4 +206,95 @@ video.fade-out {
   opacity: 0;
   transform: scale(0.95);
   transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .camera-video, .screen-video,
+  .remote-videos-container video {
+    width: 100%;
+    height: auto;
+  }
+
+  .room-id-input {
+    width: 90%;
+  }
+
+  .video-controls button {
+    margin: 10px 5px;
+    padding: 10px 16px;
+  }
+
+  .conference-section {
+    flex-direction: column;
+  }
+
+  .chat-section {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+  }
+}
+
+
+.remote-videos-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px;
+}
+
+.remote-wrapper {
+  position: relative;
+  display: inline-block;
+  transition: all 0.3s ease-in-out;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  background-color: #1e1e1e;
+}
+
+.remote-wrapper video {
+  width: 250px;
+  height: auto;
+  border-radius: 10px;
+}
+
+.remote-wrapper.pinned {
+  width: 70vw !important;
+  height: auto;
+  max-height: 80vh;
+  z-index: 1000;
+  transform: scale(1.02);
+}
+
+.remote-wrapper.pinned video {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: contain;
+  border: 2px solid #00bcd4;
+  background-color: #000;
+}
+
+.pin-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: #ffffffdd;
+  color: #000;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.3s ease;
+}
+
+.pin-button:hover {
+  background-color: #ffe066;
+  color: #000;
 }

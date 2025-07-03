@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import './VideoCall.css';
 import { v4 as uuidv4 } from "uuid";
 import ChatBox from './ChatBox';
-
+import { faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMicrophone,
@@ -17,15 +17,15 @@ import {
   faUserCircle
 } from '@fortawesome/free-solid-svg-icons';
 
-
 const BASE_URL = "https://video-conferencing-application-gmsl.onrender.com";
 
 const VideoCall = () => {
-  const localVideoRef = useRef();
+  const cameraVideoRef = useRef(null);
+  const screenVideoRef = useRef(null);
   const remoteVideosRef = useRef({});
   const socketRef = useRef();
   const peersRef = useRef({});
-  const streamRef = useRef(null);
+  const streamRef = useRef({ camera: null, screen: null });
 
   const [userId] = useState(localStorage.getItem("userId"));
   const [username] = useState(localStorage.getItem("username"));
@@ -34,11 +34,23 @@ const VideoCall = () => {
   const [createdRoomId, setCreatedRoomId] = useState("");
   const [joined, setJoined] = useState(false);
   const [participants, setParticipants] = useState([]);
+const [isScreenSharing, setIsScreenSharing] = useState(false);
+const [pinnedUserId, setPinnedUserId] = useState(null);
 
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [meetingId, setMeetingId] = useState(null);
 
+
+
+useEffect(() => {
+  const wrappers = document.querySelectorAll(".remote-wrapper");
+  wrappers.forEach((wrapper) => {
+    const isPinned = wrapper.dataset.userid === pinnedUserId;
+    wrapper.classList.toggle("pinned", isPinned);
+    wrapper.style.display = pinnedUserId && !isPinned ? "none" : "inline-block";
+  });
+}, [pinnedUserId]);
 
 
   const handleCreateRoom = async () => {
@@ -78,9 +90,12 @@ const VideoCall = () => {
 
       socketRef.current = new WebSocket(`${BASE_URL.replace("https", "wss")}/ws/signaling`);
 
-      socketRef.current.onopen = async () => {
-        await startLocalStream();
-        sendSignal({ type: "join", roomId, sender: userId });
+      socketRef.current.onopen = () => {
+        setTimeout(() => {
+          startLocalStream().then(() => {
+            sendSignal({ type: "join", roomId, sender: userId });
+          });
+        }, 300); // Let DOM render refs
       };
 
       socketRef.current.onmessage = async (msg) => {
@@ -89,123 +104,172 @@ const VideoCall = () => {
 
         switch (data.type) {
           case "join":
-            console.log("🔁 New user joined, sending offer to:", data.sender);
             createOffer(data.sender);
             break;
-
           case "offer":
-            console.log("📨 Received offer from:", data.sender);
             await handleOffer(data);
             break;
-
           case "answer":
-            console.log("📨 Received answer from:", data.sender);
             await peersRef.current[data.sender]?.setRemoteDescription(new RTCSessionDescription(data.sdp));
             break;
-
           case "ice-candidate":
-            console.log("📨 Received ICE candidate from:", data.sender);
             await peersRef.current[data.sender]?.addIceCandidate(new RTCIceCandidate(data.candidate));
             break;
-
           case "user-left":
-            console.log("👋 User left:", data.sender);
             const leftId = data.sender;
-
             const video = remoteVideosRef.current[leftId];
             if (video && video.parentNode) {
-              video.classList.add("fade-out");
-              setTimeout(() => {
-                if (video.parentNode) {
-                  video.parentNode.removeChild(video);
-                }
-              }, 500);
+              video.remove();
             }
             delete remoteVideosRef.current[leftId];
-
             setParticipants((prev) => prev.filter((id) => id !== leftId));
-
-            if (peersRef.current[leftId]) {
-              peersRef.current[leftId].close();
-              delete peersRef.current[leftId];
-            }
+            peersRef.current[leftId]?.close();
+            delete peersRef.current[leftId];
             break;
-
-          default:
-            console.warn("❓ Unknown message type:", data.type);
         }
       };
     } catch (err) {
       alert("Join room failed");
-      console.error("Join error:", err);
+      console.error(err);
     }
   };
 
-
   const startLocalStream = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    streamRef.current = stream;
-    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+    const camera = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    streamRef.current.camera = camera;
+
+    if (cameraVideoRef.current) cameraVideoRef.current.srcObject = camera;
+
+    Object.values(peersRef.current).forEach((peer) => {
+      camera.getTracks().forEach((track) => peer.addTrack(track, camera));
+    });
   };
 
- const createPeer = (targetId) => {
-   const peer = new RTCPeerConnection({
-     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-   });
+
+const startScreenShare = async () => {
+  if (isScreenSharing) {
+    // 👇 STOP screen sharing
+    const screenStream = streamRef.current.screen;
+    if (screenStream) {
+      screenStream.getTracks().forEach((track) => track.stop());
+    }
+
+    // Revert to camera video
+    const camTrack = streamRef.current.camera?.getVideoTracks()[0];
+    Object.values(peersRef.current).forEach((peer) => {
+      const sender = peer.getSenders().find(s => s.track?.kind === 'video');
+      if (sender && camTrack) {
+        sender.replaceTrack(camTrack);
+      }
+    });
+
+    if (cameraVideoRef.current && streamRef.current.camera) {
+      cameraVideoRef.current.srcObject = streamRef.current.camera;
+    }
+
+    if (screenVideoRef.current) {
+      screenVideoRef.current.srcObject = null;
+    }
+
+    setIsScreenSharing(false);
+    return;
+  }
+
+  // 👇 START screen sharing
+  try {
+    const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    streamRef.current.screen = screen;
+
+    const screenTrack = screen.getVideoTracks()[0];
+
+    Object.values(peersRef.current).forEach((peer) => {
+      const sender = peer.getSenders().find(s => s.track?.kind === 'video');
+      if (sender) {
+        sender.replaceTrack(screenTrack);
+      } else {
+        peer.addTrack(screenTrack, screen);
+      }
+    });
+
+    if (screenVideoRef.current) {
+      screenVideoRef.current.srcObject = screen;
+    }
+
+    setIsScreenSharing(true);
+
+    screenTrack.onended = () => {
+      // If user stops sharing from browser UI (e.g. top bar)
+      startScreenShare(); // Reuse toggle logic
+    };
+
+  } catch (err) {
+    console.error("Screen share error:", err);
+    alert("Screen share failed or cancelled");
+  }
+};
 
 
-   console.log(`🔧 Creating peer connection to: ${targetId}`);
+
+  const createPeer = (targetId) => {
+    const peer = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+
+    peer.onicecandidate = (e) => {
+      if (e.candidate) {
+        sendSignal({ type: "ice-candidate", candidate: e.candidate, sender: userId, target: targetId });
+      }
+    };
+
+    peer.ontrack = (e) => {
+      const stream = e.streams[0];
+      let videoEl = remoteVideosRef.current[targetId];
+
+      if (!videoEl) {
+        videoEl = document.createElement("video");
+        videoEl.autoplay = true;
+        videoEl.playsInline = true;
+        videoEl.width = 250;
+        videoEl.controls = false;
+        videoEl.srcObject = stream;
+
+        remoteVideosRef.current[targetId] = videoEl;
+
+        const container = document.getElementById("remote-container");
+        if (container) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "remote-wrapper";
+          wrapper.dataset.userid = targetId;
+
+          const pinBtn = document.createElement("button");
+          pinBtn.className = "pin-button";
+          pinBtn.innerHTML = '<i class="fas fa-thumbtack"></i>';
+          pinBtn.onclick = () => {
+            setPinnedUserId((prev) => (prev === targetId ? null : targetId));
+          };
+
+          wrapper.appendChild(pinBtn);
+          wrapper.appendChild(videoEl);
+          container.appendChild(wrapper);
+        }
+      }
+
+      setParticipants((prev) => [...new Set([...prev, targetId])]);
+    };
 
 
-   peer.onicecandidate = (e) => {
-     if (e.candidate) {
-       console.log(`🧊 Sending ICE candidate to: ${targetId}`);
-       sendSignal({
-         type: "ice-candidate",
-         candidate: e.candidate,
-         sender: userId,
-         target: targetId,
-       });
-     }
-   };
 
+    // Add tracks if available
+    if (streamRef.current?.camera) {
+      streamRef.current.camera.getTracks().forEach((track) => peer.addTrack(track, streamRef.current.camera));
+    }
+    if (streamRef.current?.screen) {
+      streamRef.current.screen.getTracks().forEach((track) => peer.addTrack(track, streamRef.current.screen));
+    }
 
-   peer.ontrack = (e) => {
-     console.log(`🎥🔊 Received remote track from ${targetId}`);
-     const stream = e.streams[0];
-     let videoEl = remoteVideosRef.current[targetId];
-
-     if (!videoEl) {
-       videoEl = document.createElement("video");
-       videoEl.autoplay = true;
-       videoEl.playsInline = true;
-       videoEl.width = 250;
-       videoEl.controls = false;
-       videoEl.srcObject = stream;
-
-       remoteVideosRef.current[targetId] = videoEl;
-
-       const container = document.getElementById("remote-container");
-       if (container) container.appendChild(videoEl);
-     }
-
-
-     setParticipants((prev) => [...new Set([...prev, targetId])]);
-   };
-
-
-   if (streamRef.current) {
-     streamRef.current.getTracks().forEach((track) => {
-       console.log(`🔄 Adding local ${track.kind} track to peer for ${targetId}`);
-       peer.addTrack(track, streamRef.current);
-     });
-   } else {
-     console.warn("⚠️ streamRef.current is null when creating peer.");
-   }
-
-   peersRef.current[targetId] = peer;
-   return peer;
- };
+    peersRef.current[targetId] = peer;
+    return peer;
+  };
 
   const createOffer = async (targetId) => {
     const peer = createPeer(targetId);
@@ -223,11 +287,11 @@ const VideoCall = () => {
   };
 
   const sendSignal = (data) => {
-    socketRef.current.send(JSON.stringify({ ...data, roomId }));
+    socketRef.current?.send(JSON.stringify({ ...data, roomId }));
   };
 
   const toggleVideo = () => {
-    const track = streamRef.current?.getVideoTracks()[0];
+    const track = streamRef.current?.camera?.getVideoTracks()[0];
     if (track) {
       track.enabled = !track.enabled;
       setVideoEnabled(track.enabled);
@@ -235,187 +299,90 @@ const VideoCall = () => {
   };
 
   const toggleAudio = () => {
-    const track = streamRef.current?.getAudioTracks()[0];
+    const track = streamRef.current?.camera?.getAudioTracks()[0];
     if (track) {
       track.enabled = !track.enabled;
       setAudioEnabled(track.enabled);
     }
   };
 
-const startScreenShare = async () => {
-  try {
-    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-
-    const screenTrack = screenStream.getVideoTracks()[0];
-
-
-    Object.values(peersRef.current).forEach((peer) => {
-      const senders = peer.getSenders();
-      const videoSender = senders.find(sender => sender.track?.kind === 'video');
-      if (videoSender) {
-        videoSender.replaceTrack(screenTrack);
-      }
-    });
-
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = screenStream;
-    }
-
-
-    screenTrack.onended = async () => {
-      const webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      const newVideoTrack = webcamStream.getVideoTracks()[0];
-      streamRef.current = webcamStream;
-
-      Object.values(peersRef.current).forEach((peer) => {
-        const senders = peer.getSenders();
-        const videoSender = senders.find(sender => sender.track?.kind === 'video');
-        if (videoSender) {
-          videoSender.replaceTrack(newVideoTrack);
-        }
-      });
-
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = webcamStream;
-      }
-    };
-
-  } catch (err) {
-    alert("Screen share failed or canceled");
-    console.error("Screen share error:", err);
-  }
-};
-
-
-
   const leaveMeeting = () => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
       sendSignal({ type: "user-left", sender: userId });
     }
 
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
+    ["camera", "screen"].forEach((type) => {
+      streamRef.current?.[type]?.getTracks().forEach((t) => t.stop());
+    });
+    streamRef.current = { camera: null, screen: null };
 
     Object.values(peersRef.current).forEach((peer) => peer.close());
     peersRef.current = {};
 
     Object.values(remoteVideosRef.current).forEach((videoEl) => {
-      if (videoEl && videoEl.parentNode) {
-        videoEl.classList.add("fade-out");
-        setTimeout(() => {
-          if (videoEl.parentNode) {
-            videoEl.parentNode.removeChild(videoEl);
-          }
-        }, 500);
-      }
+      if (videoEl?.parentNode) videoEl.remove();
     });
     remoteVideosRef.current = {};
-
     document.getElementById("remote-container").innerHTML = "";
-    socketRef.current?.close();
 
+    socketRef.current?.close();
     setJoined(false);
     setParticipants([]);
   };
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  return (
+    <div className="video-container">
+      {!joined ? (
+        <div className="join-section">
+          <button onClick={handleCreateRoom}>➕ Create Room</button>
+          {createdRoomId && <p>🆔 Room ID: {createdRoomId}</p>}
+          <input
+            type="text"
+            placeholder="🔑 Enter Room ID"
+            value={roomId}
+            onChange={(e) => setRoomId(e.target.value)}
+          />
+          <button onClick={handleJoinRoom}>🚪 Join Room</button>
+        </div>
+      ) : (
+        <div className="conference-section">
+          <div className="main-video-area">
+            <h4><FontAwesomeIcon icon={faUserCircle} /> Camera View</h4>
+           <video ref={cameraVideoRef} autoPlay muted playsInline className="camera-video" />
+            <h4><FontAwesomeIcon icon={faDesktop} /> Screen Share</h4>
+            <video ref={screenVideoRef} autoPlay muted playsInline className="screen-video" />
+
+            <div id="remote-container" className="remote-videos-container" />
+
+            <div className="video-controls">
+              <button onClick={toggleVideo}>
+                <FontAwesomeIcon icon={videoEnabled ? faVideo : faVideoSlash} />
+              </button>
+              <button onClick={toggleAudio}>
+                <FontAwesomeIcon icon={audioEnabled ? faMicrophone : faMicrophoneSlash} />
+              </button>
+              <button onClick={startScreenShare} title={isScreenSharing ? "Stop Screen Share" : "Start Screen Share"}>
+                <FontAwesomeIcon icon={faDesktop} spin={isScreenSharing ? false : true} />
+              </button>
 
 
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-/>
-
-   return (
-    
-      <div className="video-container">
-        <div className="header-left">
-    <div className="logo glow">
-      <span className="logo-icon">🔵</span>
-      <span className="logo-text">Meet<span>Pro</span></span>
-    </div>
-</div>
-        {!joined ? (
-          <div classN
-          ame="join-section">
-            <button onClick={handleCreateRoom} className="join-button">➕ Create Room</button>
-            {createdRoomId && (
-              <p className="room-id-text">
-                🆔 Room ID: <strong>{createdRoomId}</strong>
-              </p>
+              <button onClick={leaveMeeting} className="leave-button">
+                <FontAwesomeIcon icon={faDoorOpen} />
+              </button>
+            </div>
+          </div>
+          <div className="chat-section">
+            <h3><FontAwesomeIcon icon={faComments} /> Chat</h3>
+            {meetingId && userId && username && (
+              <ChatBox meetingId={meetingId} senderId={userId} senderName={username} />
             )}
-            <input
-              type="text"
-              placeholder="🔑 Enter Room ID"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-              className="room-id-input"
-            />
-            <button onClick={handleJoinRoom} className="join-button">🚪 Join Room</button>
           </div>
-        ) : (
-          <div className="conference-section">
-            <div className="main-video-area">
-              <div className="participant-count">
-                <p><FontAwesomeIcon icon={faDoorOpen} /> Room: {roomId}</p>
-{/*                 <p><FontAwesomeIcon icon={faUser} /> Your ID: {userId}</p> */}
-                <p><FontAwesomeIcon icon={faUser} /> You: <strong>{username}</strong></p>
-
-                <p><FontAwesomeIcon icon={faUsers} /> Participants: {participants.length + 1}</p>
-              </div>
-
-              <div className="local-video-container">
-                <h4><FontAwesomeIcon icon={faUserCircle} /> Your Video</h4>
-                <video ref={localVideoRef} autoPlay muted playsInline className="local-video" />
-              </div>
-
-              <div id="remote-container" className="remote-videos-container" />
-
-              <div className="video-controls">
-                <button
-                  onClick={toggleVideo}
-                  title={videoEnabled ? "Turn Off Video" : "Turn On Video"}
-                >
-                  <FontAwesomeIcon icon={videoEnabled ? faVideo : faVideoSlash} bounce />
-                </button>
-
-                <button
-                  onClick={toggleAudio}
-                  className="tooltip-btn"
-                  data-tooltip={audioEnabled ? "Mute Microphone" : "Unmute Microphone"}
-                >
-                  <FontAwesomeIcon icon={audioEnabled ? faMicrophone : faMicrophoneSlash} />
-                </button>
-
-                <button onClick={startScreenShare} title="Share Screen">
-                  <FontAwesomeIcon icon={faDesktop} spin />
-                </button>
-
-               <button
-                 onClick={leaveMeeting}
-                 title="Leave Meeting"
-                 className="leave-button"
-                 style={{ backgroundColor: "#e74c3c", color: "white" }}
-               >
-                 <FontAwesomeIcon icon={faDoorOpen} />
-               </button>
-
-              </div>
-            </div>
-
-            <div className="chat-section">
-              <h3 className="chat-title">
-                <FontAwesomeIcon icon={faComments} /> Meeting Chat
-              </h3>
-              {meetingId && userId && username && (<ChatBox meetingId={meetingId} senderId={userId} senderName={username} />
-)}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default VideoCall;
