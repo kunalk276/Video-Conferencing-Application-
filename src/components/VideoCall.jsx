@@ -20,8 +20,11 @@ import {
 const BASE_URL = "https://video-conferencing-application-gmsl.onrender.com";
 
 const VideoCall = () => {
+
   const cameraVideoRef = useRef(null);
   const screenVideoRef = useRef(null);
+  const localVideoRef = useRef(null);
+
   const remoteVideosRef = useRef({});
   const socketRef = useRef();
   const peersRef = useRef({});
@@ -35,22 +38,45 @@ const VideoCall = () => {
   const [joined, setJoined] = useState(false);
   const [participants, setParticipants] = useState([]);
 const [isScreenSharing, setIsScreenSharing] = useState(false);
+
 const [pinnedUserId, setPinnedUserId] = useState(null);
 
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [meetingId, setMeetingId] = useState(null);
+const [presenterName, setPresenterName] = useState(null);
 
 
 
 useEffect(() => {
   const wrappers = document.querySelectorAll(".remote-wrapper");
+
   wrappers.forEach((wrapper) => {
-    const isPinned = wrapper.dataset.userid === pinnedUserId;
-    wrapper.classList.toggle("pinned", isPinned);
-    wrapper.style.display = pinnedUserId && !isPinned ? "none" : "inline-block";
+    const userId = wrapper.dataset.userid;
+    const isPinned = userId === pinnedUserId;
+
+    if (isPinned) {
+      wrapper.classList.add("pinned");
+      wrapper.style.display = "inline-block";
+      wrapper.classList.remove("fade-out");
+    } else {
+      wrapper.classList.remove("pinned");
+
+      if (pinnedUserId) {
+
+        wrapper.classList.add("fade-out");
+        setTimeout(() => {
+          wrapper.style.display = "none";
+        }, 300);
+      } else {
+
+        wrapper.classList.remove("fade-out");
+        wrapper.style.display = "inline-block";
+      }
+    }
   });
 }, [pinnedUserId]);
+
 
 
   const handleCreateRoom = async () => {
@@ -126,6 +152,13 @@ useEffect(() => {
             peersRef.current[leftId]?.close();
             delete peersRef.current[leftId];
             break;
+
+            case "start-screen-share":
+              const { presenterName } = data;
+
+              console.log("Presenter started screen sharing:", presenterName);
+
+              break;
         }
       };
     } catch (err) {
@@ -145,69 +178,67 @@ useEffect(() => {
     });
   };
 
-
 const startScreenShare = async () => {
-  if (isScreenSharing) {
-    // 👇 STOP screen sharing
-    const screenStream = streamRef.current.screen;
-    if (screenStream) {
-      screenStream.getTracks().forEach((track) => track.stop());
+    if (isScreenSharing) {
+      stopScreenShare();
+      return;
     }
 
-    // Revert to camera video
-    const camTrack = streamRef.current.camera?.getVideoTracks()[0];
+    try {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      const screenTrack = screenStream.getVideoTracks()[0];
+      setIsScreenSharing(true); // ✅ SET TRUE
+
+      // Replace video track in peer connections
+      Object.values(peersRef.current).forEach((peer) => {
+        const sender = peer.getSenders().find(s => s.track.kind === 'video');
+        if (sender) {
+          sender.replaceTrack(screenTrack);
+        }
+      });
+
+      if (screenVideoRef.current) {
+        screenVideoRef.current.srcObject = screenStream;
+      }
+
+ sendSignal({
+      type: "start-screen-share",
+      sender: userId,
+      presenterName: username,
+    });
+
+      screenTrack.onended = () => {
+        stopScreenShare();
+      };
+
+    } catch (err) {
+      console.error("Screen share error:", err);
+      alert("Screen sharing failed or canceled.");
+    }
+  };
+
+  const stopScreenShare = async () => {
+    setIsScreenSharing(false); // ✅ SET FALSE
+
+    const webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const newTrack = webcamStream.getVideoTracks()[0];
+    streamRef.current = webcamStream;
+
     Object.values(peersRef.current).forEach((peer) => {
       const sender = peer.getSenders().find(s => s.track?.kind === 'video');
-      if (sender && camTrack) {
-        sender.replaceTrack(camTrack);
+      if (sender) {
+        sender.replaceTrack(newTrack);
       }
     });
 
-    if (cameraVideoRef.current && streamRef.current.camera) {
-      cameraVideoRef.current.srcObject = streamRef.current.camera;
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = webcamStream;
     }
 
     if (screenVideoRef.current) {
       screenVideoRef.current.srcObject = null;
     }
-
-    setIsScreenSharing(false);
-    return;
-  }
-
-  // 👇 START screen sharing
-  try {
-    const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    streamRef.current.screen = screen;
-
-    const screenTrack = screen.getVideoTracks()[0];
-
-    Object.values(peersRef.current).forEach((peer) => {
-      const sender = peer.getSenders().find(s => s.track?.kind === 'video');
-      if (sender) {
-        sender.replaceTrack(screenTrack);
-      } else {
-        peer.addTrack(screenTrack, screen);
-      }
-    });
-
-    if (screenVideoRef.current) {
-      screenVideoRef.current.srcObject = screen;
-    }
-
-    setIsScreenSharing(true);
-
-    screenTrack.onended = () => {
-      // If user stops sharing from browser UI (e.g. top bar)
-      startScreenShare(); // Reuse toggle logic
-    };
-
-  } catch (err) {
-    console.error("Screen share error:", err);
-    alert("Screen share failed or cancelled");
-  }
-};
-
+  };
 
 
   const createPeer = (targetId) => {
@@ -248,8 +279,14 @@ const startScreenShare = async () => {
             setPinnedUserId((prev) => (prev === targetId ? null : targetId));
           };
 
+          // 🆕 Add presenter label
+          const presenterLabel = document.createElement("div");
+          presenterLabel.className = "presenter-name-label";
+          presenterLabel.innerText = `Presenter: ${username}`; // Replace username with actual sender name if you have it
+
           wrapper.appendChild(pinBtn);
           wrapper.appendChild(videoEl);
+          wrapper.appendChild(presenterLabel);
           container.appendChild(wrapper);
         }
       }
@@ -350,9 +387,22 @@ const startScreenShare = async () => {
         <div className="conference-section">
           <div className="main-video-area">
             <h4><FontAwesomeIcon icon={faUserCircle} /> Camera View</h4>
-           <video ref={cameraVideoRef} autoPlay muted playsInline className="camera-video" />
-            <h4><FontAwesomeIcon icon={faDesktop} /> Screen Share</h4>
-            <video ref={screenVideoRef} autoPlay muted playsInline className="screen-video" />
+            <video ref={cameraVideoRef} autoPlay muted playsInline className="camera-video" />
+
+           {isScreenSharing && (
+             <div className="screen-video-wrapper">
+               <video
+                 ref={screenVideoRef}
+                 autoPlay
+                 muted
+                 playsInline
+                 className={`screen-video ${!isScreenSharing ? 'fade-out' : ''}`}
+               />
+               <div className="presenter-overlay">Presenter: {username}</div>
+             </div>
+           )}
+
+
 
             <div id="remote-container" className="remote-videos-container" />
 
@@ -364,8 +414,9 @@ const startScreenShare = async () => {
                 <FontAwesomeIcon icon={audioEnabled ? faMicrophone : faMicrophoneSlash} />
               </button>
               <button onClick={startScreenShare} title={isScreenSharing ? "Stop Screen Share" : "Start Screen Share"}>
-                <FontAwesomeIcon icon={faDesktop} spin={isScreenSharing ? false : true} />
+                <FontAwesomeIcon icon={faDesktop} spin={!isScreenSharing} />
               </button>
+
 
 
               <button onClick={leaveMeeting} className="leave-button">
