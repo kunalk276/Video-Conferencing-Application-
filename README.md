@@ -90,8 +90,36 @@ cd backend
 * `Meeting`: Stores meeting room codes, timestamps, and host references  
 * `Message`: Stores in-meeting chat messages  
 
-📄 Full ER Diagram → [`docs/ERD.puml`](docs/ERD.puml)  
-📄 SQL Schema → [`docs/schema.sql`](docs/schema.sql)
+📄 Full ER Diagram → ![image](https://github.com/user-attachments/assets/ad7e49d6-2e9d-4ffe-a962-7199719e3e55)
+  
+📄 SQL Schema → ## 🗃️ SQL Schema (PostgreSQL)
+
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(20),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE meetings (
+  id SERIAL PRIMARY KEY,
+  meeting_code VARCHAR(10) UNIQUE NOT NULL,
+  host_id INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE messages (
+  id SERIAL PRIMARY KEY,
+  sender_id INTEGER REFERENCES users(id),
+  meeting_id INTEGER REFERENCES meetings(id),
+  content TEXT NOT NULL,
+  sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
 
 ---
 
