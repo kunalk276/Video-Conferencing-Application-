@@ -38,7 +38,7 @@
 ## 🌐 Live Demo
 
 - 🔗 [Frontend (Vercel)](https://video-conferencing-application-taupe.vercel.app)
-- 🔗 [Backend Repo](https://github.com/kunalk276/Video-Conferencing-Application-)
+- 🔗 [Backend Render](https://video-conferencing-application-gmsl.onrender.com)
 
 ---
 
