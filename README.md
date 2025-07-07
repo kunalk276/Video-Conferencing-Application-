@@ -1,74 +1,168 @@
-<<<<<<< HEAD
-# Video-Conferencing-Application-
-=======
-# Getting Started with Create React App
+# MeetPro 🎥💬
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Issues](https://img.shields.io/github/issues/kunalk276/Video-Conferencing-Application-)](https://github.com/kunalk276/Video-Conferencing-Application-/issues)
+[![Stars](https://img.shields.io/github/stars/kunalk276/Video-Conferencing-Application-)](https://github.com/kunalk276/Video-Conferencing-Application-)
 
-In the project directory, you can run:
+**MeetPro** is a modern, full-stack video conferencing web application built using **React**, **Spring Boot**, **WebRTC**, and **WebSocket**. It's designed to deliver a secure, real-time experience similar to Google Meet.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## ✨ Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- ✅ JWT Authentication & Authorization  
+- 🎥 Real-Time Video & Audio Communication (WebRTC)  
+- 🖥️ Screen Sharing (with simultaneous camera & mic)  
+- 🗣️ Live In-Meeting Chat  
+- 📅 Schedule or Create Meetings  
+- ⏰ Meeting Timers & Status Indicators  
+- 🧑‍🤝‍🧑 View Active Participants  
+- 🌐 Responsive UI for All Devices  
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🧰 Tech Stack
 
-### `npm run build`
+| Layer       | Tech Used                                  |
+|-------------|---------------------------------------------|
+| Frontend    | React, Tailwind CSS, Zustand, Socket.IO     |
+| Backend     | Spring Boot, Spring Security, WebSocket     |
+| Real-Time   | WebRTC (peer-to-peer), STOMP over SockJS    |
+| Database    | PostgreSQL (prod), MySQL (dev)              |
+| Deployment  | Docker, Vercel (frontend), Render (backend) |
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🌐 Live Demo
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- 🔗 [Frontend (Vercel)](https://video-conferencing-application-taupe.vercel.app)
+- 🔗 [Backend Repo](https://github.com/kunalk276/Video-Conferencing-Application-)
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🛠️ Installation
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 1. Clone the Repository
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+git clone https://github.com/kunalk276/Video-Conferencing-Application-.git
+cd Video-Conferencing-Application-
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+### 2. Frontend Setup
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+### 3. Backend Setup (Spring Boot)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+#### Option A: Docker (Recommended)
 
-### Analyzing the Bundle Size
+```bash
+cd backend
+docker build -t meetpro-backend .
+docker run -p 8080:8080 --env-file .env meetpro-backend
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+#### Option B: Local Maven Run
 
-### Making a Progressive Web App
+```bash
+cd backend
+./mvnw spring-boot:run
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+> ⚠️ Create a `.env` file or configure your `application.properties` for DB and JWT settings.
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🗃️ Database Overview
 
-### Deployment
+* `User`: Stores user credentials and profile info  
+* `Meeting`: Stores meeting room codes, timestamps, and host references  
+* `Message`: Stores in-meeting chat messages  
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+📄 Full ER Diagram → [`docs/ERD.puml`](docs/ERD.puml)  
+📄 SQL Schema → [`docs/schema.sql`](docs/schema.sql)
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
->>>>>>> cbffc33 (Initial commit)
+## 📡 API Reference
+
+| Method | Endpoint               | Description           |
+|--------|------------------------|------------------------|
+| POST   | `/api/auth/signup`     | Register a new user    |
+| POST   | `/api/auth/login`      | Login with JWT         |
+| POST   | `/api/meetings/create` | Create a meeting       |
+| GET    | `/api/meetings/{code}` | Fetch meeting details  |
+| WS     | `/ws/chat`             | Real-time messaging    |
+
+➡️ Full API collection → [`docs/postman_collection.json`](docs/postman_collection.json)
+
+---
+
+## 🧑‍💻 Contributing
+
+We welcome your contributions! Follow these steps to get started:
+
+1. Fork the repository  
+2. Create a new branch:  
+   ```bash
+   git checkout -b feature/your-feature
+   ```  
+3. Commit your changes:  
+   ```bash
+   git commit -m "Add: your feature"
+   ```  
+4. Push to your branch:  
+   ```bash
+   git push origin feature/your-feature
+   ```  
+5. Open a **Pull Request** 🎉  
+
+📜 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for detailed guidelines.
+
+---
+
+## 🧪 Testing
+
+- Manual testing via frontend interface and Postman  
+- Unit testing with Spring Boot JUnit  
+- E2E testing roadmap (coming soon)
+
+---
+
+## 🔒 Security
+
+- JWT-secured APIs and WebSocket access  
+- Role-based access for meeting creation and joining  
+- Input validation and XSS-safe messaging
+
+---
+
+## 📄 License
+
+Licensed under the [MIT License](LICENSE).
+
+---
+
+## 👤 Author
+
+**Kunal Kadam**  
+📧 [kunalkadam2762001@gmail.com](mailto:kunalkadam2762001@gmail.com)  
+🌐 [GitHub](https://github.com/kunalk276) | [LinkedIn](https://linkedin.com/in/kunaldkadam)
+
+---
+
+## ⭐️ Support This Project
+
+If you find this project helpful or inspiring, give it a ⭐ on [GitHub](https://github.com/kunalk276/Video-Conferencing-Application-)!
+
