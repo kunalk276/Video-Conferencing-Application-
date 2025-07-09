@@ -27,8 +27,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 //.withSockJS()
     }
 
-    public ServerEndpointExporter serverEndpointExporter()
-    {
+    public ServerEndpointExporter serverEndpointExporter() {
         return new ServerEndpointExporter();
     }
 }
